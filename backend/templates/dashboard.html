@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard – Focusly</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="/static/images/logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb'
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <style>
+    /* Make cursor pointer on nav buttons */
+    nav button {
+      cursor: pointer;
+    }
+
+
+    nav button.active {
+  background-color: #2563eb; /* Tailwind primary blue */
+  color: white;
+}
+
+nav button.active svg {
+  fill: white !important;
+}
+
+  </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex">
+  <!-- Overlay for Mobile -->
+  <div id="mobile-sidebar" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="bg-white w-64 p-4 space-y-6 fixed inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-30 shadow-md flex flex-col">
+    
+    <!-- Productivity Box -->
+    <div class="bg-gray-100 p-4 rounded-lg shadow">
+      <h2 class="text-lg font-semibold mb-2">Productivity</h2>
+      <div class="w-full bg-gray-200 h-2 rounded">
+        <div id="prod-bar" class="bg-primary h-2 rounded" style="width: 0%;"></div>
+      </div>
+      <p id="prod-text" class="text-sm text-gray-600 mt-2">0% complete</p>
+    </div>
+
+    <!-- Menu -->
+    <nav class="space-y-2 flex-1 flex flex-col">
+      <button id="nav-all" onclick="activateNav(this); loadTasks('all')" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-100 transition">
+        <!-- Dashboard SVG -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#85A2FF" id="estate">
+          <path d="M20,8h0L14,2.74a3,3,0,0,0-4,0L4,8a3,3,0,0,0-1,2.26V19a3,3,0,0,0,3,3H18a3,3,0,0,0,3-3V10.25A3,3,0,0,0,20,8ZM14,20H10V15a1,1,0,0,1,1-1h2a1,1,0,0,1,1,1Zm5-1a1,1,0,0,1-1,1H16V15a3,3,0,0,0-3-3H11a3,3,0,0,0-3,3v5H6a1,1,0,0,1-1-1V10.25a1,1,0,0,1,.34-.75l6-5.25a1,1,0,0,1,1.32,0l6,5.25a1,1,0,0,1,.34.75Z"></path>
+        </svg>
+        Dashboard
+      </button>
+      <button id="nav-pending" onclick="activateNav(this); loadTasks('pending')" class="w-full flex items-center p-3 rounded-lg hover:bg-yellow-100 transition">
+        <!-- Pending Tasks SVG -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#F4FF5C" id="clipboard-notes">
+          <path d="M13,14H9a1,1,0,0,0,0,2h4a1,1,0,0,0,0-2ZM17,4H15.82A3,3,0,0,0,13,2H11A3,3,0,0,0,8.18,4H7A3,3,0,0,0,4,7V19a3,3,0,0,0,3,3H17a3,3,0,0,0,3-3V7A3,3,0,0,0,17,4ZM10,5a1,1,0,0,1,1-1h2a1,1,0,0,1,1,1V6H10Zm8,14a1,1,0,0,1-1,1H7a1,1,0,0,1-1-1V7A1,1,0,0,1,7,6H8V7A1,1,0,0,0,9,8h6a1,1,0,0,0,1-1V6h1a1,1,0,0,1,1,1Zm-3-9H9a1,1,0,0,0,0,2h6a1,1,0,0,0,0-2Z"></path>
+        </svg>
+        Pending Tasks
+      </button>
+      <button id="nav-completed" onclick="activateNav(this); loadTasks('completed')" class="w-full flex items-center p-3 rounded-lg hover:bg-green-100 transition">
+        <svg class="w-5 h-5 mr-3" fill="#34D399" viewBox="0 0 24 24">
+          <path d="M5 13l4 4L19 7" stroke="#065F46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Completed Tasks
+      </button>
+      <button id="nav-pomodoro" onclick="activateNav(this); window.location.href='/pomodoro'" class="w-full flex items-center p-3 rounded-lg hover:bg-red-100 transition">
+  <!-- Pomodoro SVG -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#FF714A" id="stopwatch">
+    <path d="M18.3,8.59l.91-.9a1,1,0,0,0-1.42-1.42l-.9.91a8,8,0,0,0-9.79,0l-.91-.92A1,1,0,0,0,4.77,7.69l.92.91A7.92,7.92,0,0,0,4,13.5,8,8,0,1,0,18.3,8.59ZM12,19.5a6,6,0,1,1,6-6A6,6,0,0,1,12,19.5Zm-2-15h4a1,1,0,0,0,0-2H10a1,1,0,0,0,0,2Zm3,6a1,1,0,0,0-2,0v1.89a1.5,1.5,0,1,0,2,0Z"></path>
+  </svg>
+  Pomodoro
+</button>
+
+      <button onclick="window.location.href='/countdown'" class="w-full flex items-center p-3 rounded-lg hover:bg-purple-100 transition">
+  <!-- Countdown SVG -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#B25CFF">
+    <path d="M18.9917,21.002h-1V19.335a5.00057,5.00057,0,0,0-.29956-1.67773c-.01093-.02936-.0224-.05658-.03589-.08454a4.97694,4.97694,0,0,0-.66455-1.23675l-1.3999-1.86719a3.01933,3.01933,0,0,1-.6001-1.80078V11.6582a3.02108,3.02108,0,0,1,.87842-2.12109l.65722-.65723A4.94566,4.94566,0,0,0,17.92365,6.0415c.00054-.01391.008-.02551.008-.03955l-.00281-.01373a5.01836,5.01836,0,0,0,.06287-.64349V3.002h1a1,1,0,0,0,0-2h-14a1,1,0,0,0,0,2h1V5.34473a5.01836,5.01836,0,0,0,.06287.64349L6.05176,6.002c0,.014.00744.02564.008.03955a4.94571,4.94571,0,0,0,1.3963,2.83838l.65723.65723A3.02108,3.02108,0,0,1,8.9917,11.6582V12.668a3.02212,3.02212,0,0,1-.59961,1.80078L6.99121,16.33594a4.98221,4.98221,0,0,0-.66437,1.23718c-.0133.02771-.02472.05463-.03552.08368A5.00309,5.00309,0,0,0,5.9917,19.335v1.667h-1a1,1,0,0,0,0,2h14a1,1,0,0,0,0-2Zm-11-16v-2h8v2Zm.87842,2.46387A2.97036,2.97036,0,0,1,8.49323,7.002h6.99694a2.97094,2.97094,0,0,1-.37689.46387l-.65723.65723a4.9603,4.9603,0,0,0-1.42187,2.8789h-2.085A4.96025,4.96025,0,0,0,9.52734,8.123ZM9.99219,15.668a5.03688,5.03688,0,0,0,.98828-2.666h2.02246a5.03332,5.03332,0,0,0,.98877,2.666l1.00012,1.334H8.99133Zm5.99951,5.334h-8V19.335a2.954,2.954,0,0,1,.02722-.333h7.94556a2.954,2.954,0,0,1,.02722.333Z"/>
+  </svg>
+  Countdown
+</button>
+      
+    </nav>
+
+    <!-- Logout Button -->
+
+
+    <!-- User Info Display -->
+<div id="user-info" class="text-sm text-gray-600 p-3 border-t border-gray-200">
+  Loading user info...
+</div>
+
+    <div class="mt-auto">
+      <button id="logout-btn" class="w-full flex items-center p-3 text-red-600 bg-white rounded-lg hover:bg-red-50 transition">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Signout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col lg:ml-64">
+    <!-- Header -->
+    <header class="w-full bg-white shadow-md py-4 px-6 flex justify-between items-center sticky top-0 z-10">
+      <div class="flex items-center space-x-3">
+        <img src="/static/images/logo.png" class="h-8 w-8" alt="Logo" />
+        <span class="font-bold text-lg">Focusly</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <!-- Updated Settings Icon -->
+        <!-- Settings Button -->
+
+        <button id="profile-btn" class="p-1 rounded-full overflow-hidden">
+          <img src="/static/images/default-avatar.png" class="h-8 w-8 rounded-full" alt="Profile" />
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Menu Button -->
+    <div class="lg:hidden px-4 pt-4">
+      <button class="p-2 bg-primary text-white rounded shadow" onclick="toggleSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Main Content Area -->
+<main class="flex-grow max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6 relative">
+
+  <!-- Center Content -->
+  <div class="space-y-6">
+
+    <!-- Top Grid: Summary Cards + Add New Task Button -->
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1 w-full">
+        <!-- Summary Cards -->
+        <!-- Total Tasks -->
+        <div class="bg-white shadow-sm p-4 rounded-lg flex items-center space-x-4">
+          <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" stroke-width="2"
+               viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12h6m2 4H7m2-8h6M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+          <div>
+            <p class="text-gray-500 text-sm">Total Tasks</p>
+            <p id="total-tasks" class="font-semibold text-lg">0</p>
+          </div>
+        </div>
+        <!-- Low Priority -->
+<div class="bg-white shadow-sm p-4 rounded-lg flex items-center space-x-4">
+  <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" id="fire-low">
+    <path fill="#22C55E" d="m8.468 8.395-.002.001-.003.002Zm9.954-.187a1.237 1.237 0 0 0-.23-.175 1 1 0 0 0-1.4.411 5.782 5.782 0 0 1-1.398 1.778 8.664 8.664 0 0 0 .134-1.51 8.714 8.714 0 0 0-4.4-7.582 1 1 0 0 0-1.492.806 7.017 7.017 0 0 1-2.471 4.942l-.23.187a8.513 8.513 0 0 0-1.988 1.863 8.983 8.983 0 0 0 3.656 13.908 1 1 0 0 0 1.377-.926 1.05 1.05 0 0 0-.05-.312 6.977 6.977 0 0 1-.19-2.581 9.004 9.004 0 0 0 4.313 4.016.997.997 0 0 0 .715.038 8.995 8.995 0 0 0 3.654-14.863Zm-3.905 12.831a6.964 6.964 0 0 1-3.577-4.402 8.908 8.908 0 0 1-.18-.964 1 1 0 0 0-.799-.845.982.982 0 0 0-.191-.018 1 1 0 0 0-.867.5 8.959 8.959 0 0 0-1.205 4.718 6.985 6.985 0 0 1-1.176-9.868 6.555 6.555 0 0 1 1.562-1.458.745.745 0 0 0 .075-.055s.296-.245.306-.25a8.968 8.968 0 0 0 2.9-4.633 6.736 6.736 0 0 1 1.385 8.088 1 1 0 0 0 1.184 1.418 7.856 7.856 0 0 0 3.862-2.688 7 7 0 0 1-3.279 10.457Z"/>
+  </svg>
+  <div>
+    <p class="text-gray-500 text-sm">Low Priority</p>
+    <p id="low-priority" class="font-semibold text-lg">0</p>
+  </div>
+</div>
+
+<!-- Medium Priority -->
+<div class="bg-white shadow-sm p-4 rounded-lg flex items-center space-x-4">
+  <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+    <g transform="scale(1.1) translate(-1,-1)">
+      <path fill="#D0DE16" d="m8.468 8.395-.002.001-.003.002Zm9.954-.187a1.237 1.237 0 0 0-.23-.175 1 1 0 0 0-1.4.411 5.782 5.782 0 0 1-1.398 1.778 8.664 8.664 0 0 0 .134-1.51 8.714 8.714 0 0 0-4.4-7.582 1 1 0 0 0-1.492.806 7.017 7.017 0 0 1-2.471 4.942l-.23.187a8.513 8.513 0 0 0-1.988 1.863 8.983 8.983 0 0 0 3.656 13.908 1 1 0 0 0 1.377-.926 1.05 1.05 0 0 0-.05-.312 6.977 6.977 0 0 1-.19-2.581 9.004 9.004 0 0 0 4.313 4.016.997.997 0 0 0 .715.038 8.995 8.995 0 0 0 3.654-14.863Zm-3.905 12.831a6.964 6.964 0 0 1-3.577-4.402 8.908 8.908 0 0 1-.18-.964 1 1 0 0 0-.799-.845.982.982 0 0 0-.191-.018 1 1 0 0 0-.867.5 8.959 8.959 0 0 0-1.205 4.718 6.985 6.985 0 0 1-1.176-9.868 6.555 6.555 0 0 1 1.562-1.458.745.745 0 0 0 .075-.055s.296-.245.306-.25a8.968 8.968 0 0 0 2.9-4.633 6.736 6.736 0 0 1 1.385 8.088 1 1 0 0 0 1.184 1.418 7.856 7.856 0 0 0 3.862-2.688 7 7 0 0 1-3.279 10.457Z"/>
+    </g>
+  </svg>
+  <div>
+    <p class="text-gray-500 text-sm">Medium Priority</p>
+    <p id="medium-priority" class="font-semibold text-lg">0</p>
+  </div>
+</div>
+
+
+<!-- High Priority -->
+<div class="bg-white shadow-sm p-4 rounded-lg flex items-center space-x-4">
+  <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" id="fire-high">
+    <path fill="#FF4444" d="m8.468 8.395-.002.001-.003.002Zm9.954-.187a1.237 1.237 0 0 0-.23-.175 1 1 0 0 0-1.4.411 5.782 5.782 0 0 1-1.398 1.778 8.664 8.664 0 0 0 .134-1.51 8.714 8.714 0 0 0-4.4-7.582 1 1 0 0 0-1.492.806 7.017 7.017 0 0 1-2.471 4.942l-.23.187a8.513 8.513 0 0 0-1.988 1.863 8.983 8.983 0 0 0 3.656 13.908 1 1 0 0 0 1.377-.926 1.05 1.05 0 0 0-.05-.312 6.977 6.977 0 0 1-.19-2.581 9.004 9.004 0 0 0 4.313 4.016.997.997 0 0 0 .715.038 8.995 8.995 0 0 0 3.654-14.863Zm-3.905 12.831a6.964 6.964 0 0 1-3.577-4.402 8.908 8.908 0 0 1-.18-.964 1 1 0 0 0-.799-.845.982.982 0 0 0-.191-.018 1 1 0 0 0-.867.5 8.959 8.959 0 0 0-1.205 4.718 6.985 6.985 0 0 1-1.176-9.868 6.555 6.555 0 0 1 1.562-1.458.745.745 0 0 0 .075-.055s.296-.245.306-.25a8.968 8.968 0 0 0 2.9-4.633 6.736 6.736 0 0 1 1.385 8.088 1 1 0 0 0 1.184 1.418 7.856 7.856 0 0 0 3.862-2.688 7 7 0 0 1-3.279 10.457Z"/>
+  </svg>
+  <div>
+    <p class="text-gray-500 text-sm">High Priority</p>
+    <p id="high-priority" class="font-semibold text-lg">0</p>
+  </div>
+</div>
+
+
+      </div>
+      <!-- Add New Task Button -->
+      <button id="add-task-btn" class="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 whitespace-nowrap">
+        + Add New Task
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex space-x-2 overflow-x-auto">
+      <button id="filter-all" class="px-4 py-2 bg-primary text-white rounded">All</button>
+      <button id="filter-high" class="px-4 py-2 rounded hover:bg-gray-100">High</button>
+      <button id="filter-medium" class="px-4 py-2 rounded hover:bg-gray-100">Medium</button>
+      <button id="filter-low" class="px-4 py-2 rounded hover:bg-gray-100">Low</button>
+    </div>
+
+    <!-- Tasks Container -->
+    <div id="tasks-container" class="space-y-4 mt-4"></div>
+
+    <!-- No Tasks Placeholder -->
+    <div id="no-tasks" class="hidden bg-white border border-dashed border-gray-300 p-10 rounded-lg text-center shadow-sm">
+      <div class="flex flex-col items-center justify-center space-y-4">
+        <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5"
+             viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round"
+            d="M8 7V3m8 4V3M3 11h18M5 19h14a2 2 0 002-2v-7H3v7a2 2 0 002 2z"/></svg>
+        <h2 class="text-xl font-semibold">No tasks found</h2>
+        <p class="text-gray-500">Create your first task to get started</p>
+        <button id="add-task-btn2" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          + Add New Task
+        </button>
+      </div>
+    </div>
+
+    <!-- Dashed Add Task Box -->
+    <div id="add-task-dashed" class="w-full border-2 border-dashed border-gray-300 rounded-lg py-8 text-center cursor-pointer hover:bg-gray-50">
+      <p class="text-gray-500 font-medium">+ Add New Task</p>
+    </div>
+  </div>
+
+  <!-- Right Sidebar -->
+  <div class="space-y-6">
+    <!-- Task Statistics -->
+    <div class="bg-white p-6 rounded-lg shadow space-y-6">
+      <h3 class="text-xl font-bold text-gray-800">Task Statistics</h3>
+      <div class="text-base text-gray-700 space-y-2">
+        <p>Total Tasks: <span id="stats-total" class="font-semibold">0</span></p>
+        <p>Completed: <span id="stats-completed" class="font-semibold">0</span></p>
+        <p>Pending: <span id="stats-pending" class="font-semibold">0</span></p>
+        <p>Completion Rate: <span id="stats-rate" class="font-semibold">0%</span></p>
+      </div>
+      <div class="mt-4">
+        <div class="w-full bg-gray-200 h-3 rounded-full">
+  <div id="stats-prod-bar" class="bg-primary h-3 rounded-full" style="width: 0%;"></div>
+</div>
+<p id="stats-prod-text" class="text-sm text-gray-500 mt-1 text-right">0/0 (0%)</p>
+      </div>
+    </div>
+
+     
+    
+    <!-- Recent Activity -->
+    <div class="bg-white p-6 rounded-lg shadow space-y-4">
+      <h3 class="text-xl font-bold text-gray-800">Recent Activity</h3>
+      <ul id="recent-activity" class="text-sm text-gray-700 space-y-2">
+        <li>No recent activity yet.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Task Modal -->
+  <div id="taskModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center p-4"
+       onclick="if(event.target === this) this.classList.add('hidden')">
+    <form id="task-form" class="bg-white rounded-lg shadow-lg max-w-md w-full p-6 space-y-6" onclick="event.stopPropagation()">
+      <div class="flex items-center space-x-3">
+        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        <h2 class="text-xl font-semibold text-gray-800">Create New Task</h2>
+      </div>
+
+      <input id="task-title" name="title" type="text" placeholder="Enter task title" required
+             class="w-full border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-primary shadow-sm" />
+
+      <textarea id="task-desc" name="description" rows="3" placeholder="Add details about your task"
+                class="w-full border-gray-300 rounded-md p-3 resize-none focus:ring-2 focus:ring-primary shadow-sm"></textarea>
+
+      <select id="task-priority" name="priority"
+              class="w-full border-gray-300 rounded-md p-3 bg-white focus:ring-2 focus:ring-primary shadow-sm" required>
+        <option value="Low">Low</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="High">High</option>
+      </select>
+
+      <input id="task-date" name="dueDate" type="date"
+             class="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-primary shadow-sm" />
+
+      <fieldset>
+        <legend class="block text-sm font-medium text-gray-700 mb-2">Status</legend>
+        <div class="flex space-x-6">
+          <label class="inline-flex items-center space-x-2">
+            <input type="radio" name="status" value="completed" class="text-primary focus:ring-primary" />
+            <span>Completed</span>
+          </label>
+          <label class="inline-flex items-center space-x-2">
+            <input type="radio" name="status" value="pending" checked class="text-primary focus:ring-primary" />
+            <span>In Progress</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="flex justify-between items-center">
+        <button type="button" id="cancel-btn" class="text-gray-500 hover:underline">Cancel</button>
+        <button type="submit" class="py-2 px-6 rounded-md text-white font-semibold bg-blue-600 hover:bg-blue-700 shadow-md transition">Create Task</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Custom Confirm Modal -->
+<div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-lg p-6 w-80 max-w-full text-center shadow-lg">
+    <p class="mb-4 text-lg font-semibold" id="confirm-message">Are you sure?</p>
+    <div class="flex justify-center space-x-4">
+      <button id="confirm-yes" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Delete</button>
+      <button id="confirm-no" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script>
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDZvQXmgnPD81cCdjVrgDn-QlaY_f5m2xE",
+    authDomain: "focusly-97e22.firebaseapp.com",
+    projectId: "focusly-97e22",
+    storageBucket: "focusly-97e22.appspot.com",
+    messagingSenderId: "109369885144",
+    appId: "1:109369885144:web:1f5c3627c4c5f6d4b372ad",
+    measurementId: "G-8GCFDG9EKL"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+
+
+  // Check for custom token in URL
+const firebaseToken = "{{ token | safe }}";
+
+if (firebaseToken) {
+  auth.signInWithCustomToken(firebaseToken)
+    .then(() => {
+      console.log('🔥 Firebase signed in with custom token');
+      window.history.replaceState({}, document.title, "/dashboard"); // Clean the URL
+    })
+    .catch((error) => {
+      console.error('❌ Firebase sign-in error:', error);
+    });
+}
+
+
+  // Elements references
+  const tasksContainer = document.getElementById('tasks-container');
+  const noTasks = document.getElementById('no-tasks');
+  const taskModal = document.getElementById('taskModal');
+  const taskForm = document.getElementById('task-form');
+  const addTaskBtns = [document.getElementById('add-task-btn'), document.getElementById('add-task-btn2'), document.getElementById('add-task-dashed')];
+  const cancelBtn = document.getElementById('cancel-btn');
+
+  // Summary counters elements
+  const totalTasksEl = document.getElementById('total-tasks');
+  const lowPriorityEl = document.getElementById('low-priority');
+  const mediumPriorityEl = document.getElementById('medium-priority');
+  const highPriorityEl = document.getElementById('high-priority');
+
+  // Stats elements
+  const statsTotal = document.getElementById('stats-total');
+  const statsCompleted = document.getElementById('stats-completed');
+  const statsPending = document.getElementById('stats-pending');
+  const statsRate = document.getElementById('stats-rate');
+  const prodBar = document.getElementById('prod-bar');
+  const prodText = document.getElementById('prod-text');
+  const recentActivityEl = document.getElementById('recent-activity');
+  let activityLog = [];
+  
+
+
+  let unsubscribeTasks = null;
+  let currentFilter = 'all';
+
+  // Utility: Show/hide modal
+  function showModal() {
+    taskModal.classList.remove('hidden');
+  }
+  function hideModal() {
+    taskModal.classList.add('hidden');
+    taskForm.reset();
+  }
+
+  // Open modal on Add Task button click
+  addTaskBtns.forEach(btn => btn && btn.addEventListener('click', showModal));
+  cancelBtn.addEventListener('click', hideModal);
+
+  // Helper: Update task summary cards and statistics
+  function updateSummary(tasks) {
+    const total = tasks.length;
+    const low = tasks.filter(t => t.priority === 'Low').length;
+    const medium = tasks.filter(t => t.priority === 'Medium').length;
+    const high = tasks.filter(t => t.priority === 'High').length;
+
+    totalTasksEl.textContent = total;
+    lowPriorityEl.textContent = low;
+    mediumPriorityEl.textContent = medium;
+    highPriorityEl.textContent = high;
+
+    const completed = tasks.filter(t => t.status === 'completed').length;
+    const pending = total - completed;
+    const rate = total ? Math.round((completed / total) * 100) : 0;
+
+    statsTotal.textContent = total;
+    statsCompleted.textContent = completed;
+    statsPending.textContent = pending;
+    statsRate.textContent = rate + '%';
+
+    //prodBar.style.width = rate + '%';
+    //prodText.textContent = `${completed}/${total} (${rate}%)`;
+
+    // Update productivity bars
+    prodBar.style.width = rate + '%';
+    prodText.textContent = `${completed}/${total} (${rate}%)`;
+
+    // If Task Statistics has its own progress bar/text, update it too
+    const statsProdBar = document.getElementById('stats-prod-bar');
+    const statsProdText = document.getElementById('stats-prod-text');
+
+    if (statsProdBar && statsProdText) {
+        statsProdBar.style.width = rate + '%';
+        statsProdText.textContent = `${completed}/${total} (${rate}%)`;
+    }
+
+
+    noTasks.classList.toggle('hidden', total > 0);
+    tasksContainer.classList.toggle('hidden', total === 0);
+  }
+
+  // Priority color classes for badge
+  const priorityColors = {
+    Low: 'text-green-700 bg-green-100',
+    Medium: 'text-yellow-700 bg-yellow-100',
+    High: 'text-red-700 bg-red-100',
+  };
+
+  // Format date helper
+  function formatDateTime(dateObj) {
+    if (!dateObj) return 'N/A';
+    const date = dateObj instanceof Date ? dateObj : dateObj.toDate ? dateObj.toDate() : new Date(dateObj);
+    const formattedDate = date.toLocaleDateString();
+    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `${formattedDate} ${formattedTime}`;
+  }
+
+  function logActivity(message) {
+  const timestamp = new Date().toLocaleString();
+  const entry = `${message} – ${timestamp}`;
+
+  activityLog.unshift(entry); // Add to beginning
+  if (activityLog.length > 10) activityLog.pop(); // Keep only 10 items
+
+  if (recentActivityEl) {
+    recentActivityEl.innerHTML = ''; // Clear current list
+    activityLog.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      recentActivityEl.appendChild(li);
+    });
+  }
+}
+
+
+  // Render tasks in the container
+  function renderTasks(tasks) {
+    tasksContainer.innerHTML = '';
+
+    tasks.forEach(task => {
+      const div = document.createElement('div');
+      div.className = 'task-item bg-white shadow p-4 rounded-lg mb-2 relative'; // relative for menu positioning
+      div.dataset.status = task.status || 'pending';
+
+      const priority = task.priority || 'Medium';
+      const priorityClass = priorityColors[priority] || priorityColors.Medium;
+
+      // Prepare dates
+      const addedDateStr = formatDateTime(task.createdAt);
+      const dueDateStr = task.dueDate ? formatDateTime(task.dueDate) : 'No due date';
+
+      // Task status text
+      const statusText = task.status || 'pending';
+
+      div.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+          <span class="inline-block px-2 py-1 rounded ${priorityClass} font-semibold text-sm uppercase">${priority}</span>
+          <div class="relative inline-block">
+            <button class="task-menu-btn text-gray-500 hover:text-gray-800 focus:outline-none text-2xl leading-none">⋮</button>
+            <div class="task-menu hidden absolute right-0 mt-2 w-32 bg-white border rounded shadow-md z-10">
+              <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 delete-btn text-red-600">Delete</button>
+              <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 toggle-status-btn">${statusText === 'pending' ? 'Mark Completed' : 'Mark Pending'}</button>
+            </div>
+          </div>
+        </div>
+        <h4 class="font-bold">${task.title}</h4>
+        <p class="text-sm text-gray-600 mb-1">${task.description || ''}</p>
+        <p class="text-xs text-gray-400 mb-1">Due: ${dueDateStr}</p>
+        <p class="text-xs text-gray-400 mb-1">Added: ${addedDateStr}</p>
+        <p class="text-xs text-gray-400 capitalize font-medium">${statusText}</p>
+      `;
+
+      tasksContainer.appendChild(div);
+
+      // Add event listeners for menu button
+      const menuBtn = div.querySelector('.task-menu-btn');
+      const menu = div.querySelector('.task-menu');
+
+      menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Close other menus
+        document.querySelectorAll('.task-menu').forEach(m => {
+          if (m !== menu) m.classList.add('hidden');
+        });
+        menu.classList.toggle('hidden');
+      });
+
+      // Close menu if clicking outside
+      document.addEventListener('click', () => {
+        menu.classList.add('hidden');
+      });
+
+      // Delete button event
+const deleteBtn = div.querySelector('.delete-btn');
+deleteBtn.addEventListener('click', async () => {
+  const confirmed = await showConfirm('Are you sure you want to delete this task?');
+  if (confirmed) {
+    try {
+      await db.collection('tasks').doc(task.id).delete();
+      logActivity(`Deleted task "${task.title}"`);
+    } catch (err) {
+      alert('Failed to delete task: ' + err.message);
+    }
+  }
+});
+
+
+      // Toggle status button event
+      const toggleStatusBtn = div.querySelector('.toggle-status-btn');
+      toggleStatusBtn.addEventListener('click', async () => {
+        const newStatus = statusText === 'pending' ? 'completed' : 'pending';
+        try {
+          await db.collection('tasks').doc(task.id).update({
+            status: newStatus
+          });
+          logActivity(`Marked task "${task.title}" as ${newStatus}`);
+
+        } catch (err) {
+          alert('Failed to update task status: ' + err.message);
+        }
+      });
+    });
+  }
+
+  // Load tasks from Firestore with filtering
+  function loadTasks(filter = 'all') {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    if (unsubscribeTasks) unsubscribeTasks();
+
+    let query = db.collection('tasks').where('userId', '==', user.uid);
+
+    // Apply filters
+    switch (filter) {
+      case 'completed':
+        query = query.where('status', '==', 'completed');
+        break;
+      case 'pending':
+        query = query.where('status', '==', 'pending');
+        break;
+      case 'high':
+        query = query.where('priority', '==', 'High');
+        break;
+      case 'medium':
+        query = query.where('priority', '==', 'Medium');
+        break;
+      case 'low':
+        query = query.where('priority', '==', 'Low');
+        break;
+      case 'today':
+        // Filter tasks due today (if dueDate field is stored)
+        const startOfDay = new Date();
+        startOfDay.setHours(0,0,0,0);
+        const endOfDay = new Date();
+        endOfDay.setHours(23,59,59,999);
+        query = query.where('dueDate', '>=', startOfDay).where('dueDate', '<=', endOfDay);
+        break;
+      case 'week':
+        // Filter tasks due this week
+        const now = new Date();
+        const day = now.getDay();
+        const diffToStartWeek = now.getDate() - day + (day === 0 ? -6 : 1); // Monday as first day
+        const startWeek = new Date(now.setDate(diffToStartWeek));
+        startWeek.setHours(0,0,0,0);
+        const endWeek = new Date(startWeek);
+        endWeek.setDate(endWeek.getDate() + 6);
+        endWeek.setHours(23,59,59,999);
+        query = query.where('dueDate', '>=', startWeek).where('dueDate', '<=', endWeek);
+        break;
+      default:
+        // no additional filter
+        break;
+    }
+
+    unsubscribeTasks = query.onSnapshot(snapshot => {
+      const tasks = [];
+      snapshot.forEach(doc => {
+        tasks.push({ id: doc.id, ...doc.data() });
+      });
+      updateSummary(tasks);
+      renderTasks(tasks);
+    });
+  }
+
+
+  // Authentication state observer
+ auth.onAuthStateChanged(user => {
+  const userInfoDiv = document.getElementById('user-info');
+
+  if (user) {
+    // Show user details
+    const name = user.displayName || 'No name';
+    const email = user.email || 'No email';
+    const uid = user.uid;
+
+    userInfoDiv.innerHTML = `
+      <p><strong>Email:</strong> ${email}</p>
+      <p><small>User ID: ${uid}</small></p>
+    `;
+
+    // Load tasks for this user
+    loadTasks(currentFilter);
+
+    // Setup form submit (safe because user is now ready)
+    taskForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const title = taskForm['title'].value.trim();
+      const description = taskForm['description'].value.trim();
+      const priority = taskForm['priority'].value;
+      const dueDateVal = taskForm['dueDate'].value;
+      const status = taskForm['status'].value || 'pending';
+
+      if (!title) {
+        alert('Task title is required.');
+        return;
+      }
+
+      let dueDate = null;
+      if (dueDateVal) {
+        dueDate = firebase.firestore.Timestamp.fromDate(new Date(dueDateVal));
+      }
+
+      try {
+        await db.collection('tasks').add({
+          userId: user.uid,
+          title,
+          description,
+          priority,
+          dueDate,
+          status,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        hideModal();
+        logActivity(`Added task "${title}"`);
+      } catch (err) {
+        alert('Failed to add task: ' + err.message);
+      }
+    });
+
+  } else {
+    userInfoDiv.textContent = 'No user logged in';
+    tasksContainer.innerHTML = '<p class="text-center text-gray-500">Please log in to view tasks.</p>';
+    noTasks.classList.add('hidden');
+  }
+});
+
+
+
+  function setupFilterButton(id, filterValue) {
+  const btn = document.getElementById(id);
+  if (btn) {
+    btn.addEventListener('click', () => {
+      currentFilter = filterValue;
+      loadTasks(filterValue);
+      activateNav(btn);
+    });
+  }
+}
+
+// Setup filter buttons safely
+['all', 'today', 'week', 'high', 'medium', 'low'].forEach(filter => {
+  setupFilterButton(`filter-${filter}`, filter);
+});
+
+
+function showConfirm(message = "Are you sure?") {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('confirm-modal');
+    const msg = document.getElementById('confirm-message');
+    const yesBtn = document.getElementById('confirm-yes');
+    const noBtn = document.getElementById('confirm-no');
+
+    msg.textContent = message;
+    modal.classList.remove('hidden');
+
+    const cleanup = () => {
+      modal.classList.add('hidden');
+      yesBtn.removeEventListener('click', onYes);
+      noBtn.removeEventListener('click', onNo);
+    };
+
+    const onYes = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const onNo = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    yesBtn.addEventListener('click', onYes);
+    noBtn.addEventListener('click', onNo);
+  });
+}
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  firebase.auth().signOut().then(() => {
+    window.location.href = '/logout'; // Call Flask logout route
+  }).catch((error) => {
+    console.error('Firebase logout error:', error);
+    // Fallback to Flask logout anyway
+    window.location.href = '/logout';
+  });
+});
+
+
+function activateNav(element) {
+  // Get all nav buttons inside <nav>
+  const navButtons = document.querySelectorAll('nav button');
+
+  // Remove 'active' class from all buttons
+  navButtons.forEach(btn => btn.classList.remove('active'));
+
+  // Add 'active' class to the clicked button
+  element.classList.add('active');
+}
+
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobile-sidebar');
+
+    if (sidebar && overlay) {
+      // Toggle sidebar visibility
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    } else {
+      console.warn('Sidebar or overlay not found');
+    }
+  }
+
+
+
+
+
+</script>
+
+
+
+</body>
+</html>

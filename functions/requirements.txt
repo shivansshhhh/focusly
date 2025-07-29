@@ -1,0 +1,13 @@
+Flask==2.3.3
+requests
+firebase-admin
+authlib
+functions-framework==3.4.0
+python-dotenv
+Flask==2.3.3
+authlib==1.2.1
+firebase-admin==6.5.0
+python-dotenv==1.0.1
+requests==2.31.0
+google-auth==2.29.0
+gunicorn==21.2.0  # If you plan to deploy on production

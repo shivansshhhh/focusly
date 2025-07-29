@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Up - Focusly</title>
+  <link rel="icon" type="image/png" href="/static/images/logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb',
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Firebase JS SDK (compat for easier integration) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gradient-to-br from-[#f3f5ff] via-[#e6ecff] to-[#e1f1ff] min-h-screen text-black transition-colors duration-300 relative">
+
+  <!-- Header -->
+  <header class="w-full fixed top-0 left-0 z-50 px-6 py-4 bg-white shadow-md flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+      <img src="/static/images/logo.png" class="h-8 w-8" alt="Logo" />
+      <span class="text-xl font-bold">Focusly</span>
+    </div>
+  </header>
+
+
+
+  <!-- Main Sign Up Section -->
+  <main class="flex items-center justify-center pt-32 px-4">
+    <div class="max-w-md w-full bg-white p-8 rounded-xl shadow-md">
+
+      <!-- Logo -->
+      <div class="flex justify-center mb-6">
+        <img src="/static/images/logo.png" class="h-12" alt="Focusly Logo" />
+      </div>
+
+      <!-- Title -->
+      <h2 class="text-2xl font-bold text-center mb-6">Create your account</h2>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="text-sm mb-4 {% if category == 'error' %}text-red-600{% elif category == 'success' %}text-green-600{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+
+      <!-- Email Sign Up Form -->
+      <form id="email-register" action="/register" method="POST" class="space-y-4">
+        <input type="email" name="email" placeholder="Email"
+               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary" required>
+        <!-- Password Field with Toggle Eye Icon -->
+<div class="relative">
+  <input type="password" name="password" id="password"
+         placeholder="Password (min 6 characters)" minlength="6"
+         class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary pr-10" required>
+  <span class="absolute right-3 top-2.5 cursor-pointer text-gray-500" onclick="togglePassword('password')">
+    <!-- Eye Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+         viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
+    </svg>
+  </span>
+</div>
+
+<!-- Confirm Password Field with Toggle Eye Icon -->
+<div class="relative">
+  <input type="password" name="password_confirm" id="password_confirm"
+         placeholder="Confirm Password" minlength="6"
+         class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary pr-10" required>
+  <span class="absolute right-3 top-2.5 cursor-pointer text-gray-500" onclick="togglePassword('password_confirm')">
+    <!-- Eye Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+         viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
+    </svg>
+  </span>
+</div>
+
+
+        <button type="submit"
+                class="w-full bg-primary text-white py-2 rounded hover:bg-blue-700 transition">
+          Sign Up
+        </button>
+      </form>
+
+      <!-- Phone Sign Up Form (Hidden by default) -->
+      <form id="phone-register" action="#" class="space-y-4 hidden">
+        <select name="country_code" required
+                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary">
+          <option value="+1" {% if country_code == "+1" and country != "Canada" %}selected{% endif %}>🇺🇸 United States (+1)</option>
+          <option value="+91" {% if country_code == "+91" %}selected{% endif %}>🇮🇳 India (+91)</option>
+          <option value="+44" {% if country_code == "+44" %}selected{% endif %}>🇬🇧 United Kingdom (+44)</option>
+          <option value="+61" {% if country_code == "+61" %}selected{% endif %}>🇦🇺 Australia (+61)</option>
+          <option value="+49" {% if country_code == "+49" %}selected{% endif %}>🇩🇪 Germany (+49)</option>
+          <option value="+1" {% if country == "Canada" %}selected{% endif %}>🇨🇦 Canada (+1)</option>
+        </select>
+
+        <input id="phone-field" type="tel" name="phone" placeholder="Mobile Number"
+               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary" required>
+
+        {% if country and country_code %}
+          <p class="text-sm text-gray-500 mt-1">Detected: {{ country }} ({{ country_code }})</p>
+        {% endif %}
+
+
+        <button id="send-otp-btn" type="button"
+                class="w-full bg-primary text-white py-2 rounded hover:bg-blue-700 transition">
+          Get OTP
+        </button>
+
+        <div id="otp-message" class="text-sm mt-1 min-h-[1.5rem]"></div>
+
+        <!-- OTP UI -->
+        <input id="otp-field" type="text" placeholder="Enter OTP"
+               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary mt-2 hidden">
+        <button id="verify-otp-btn" type="button"
+                class="w-full bg-primary text-white py-2 rounded hover:bg-blue-700 transition mt-2 hidden">
+          Verify OTP
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="flex items-center gap-2 text-sm text-gray-400 mt-6 mb-4">
+        <hr class="flex-grow border-gray-300" />
+        or
+        <hr class="flex-grow border-gray-300" />
+      </div>
+
+      <!-- Social Sign Ups -->
+      <div class="space-y-3 mt-6">
+        <a href="/auth/google"
+           class="w-full flex justify-center items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100 transition">
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google logo" />
+          Continue with Google
+        </a>
+      </div>
+
+      <!-- Toggle Sign Up Mode Button -->
+      <button id="toggle-register-mode"
+              class="w-full flex justify-center items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100 transition mt-4">
+
+        <!-- Phone Icon (shown initially) -->
+        <svg id="icon-phone" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M2 5.57143C2 3.59898 3.59898 2 5.57143 2H8.625C9.0287 2 9.39281 2.24274 9.54808 2.61538L11.4231 7.11538C11.5744 7.47863 11.4987 7.89686 11.2295 8.18394L9.82741 9.67954C10.9044 11.7563 12.2732 13.2047 14.3016 14.2842L15.7929 12.7929C16.0794 12.5064 16.5106 12.4211 16.8846 12.5769L21.3846 14.4519C21.7573 14.6072 22 14.9713 22 15.375V18.4286C22 20.401 20.401 22 18.4286 22C9.35532 22 2 14.6447 2 5.57143Z" />
+        </svg>
+
+        <!-- Email Icon (hidden initially) -->
+        <svg id="icon-email" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none"
+             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M2 7C2 5.34315 3.34315 4 5 4H19C20.6569 4 22 5.34315 22 7V17C22 18.6569 20.6569 20 19 20H5C3.34315 20 2 18.6569 2 17V7ZM4.26834 6.31832L11.4233 11.3689C11.769 11.6129 12.231 11.6129 12.5767 11.3689L19.7317 6.31832C19.5491 6.12247 19.2889 6 19 6H5C4.71114 6 4.45089 6.12247 4.26834 6.31832ZM20 8.57698L13.7301 13.0028C12.6929 13.735 11.3071 13.735 10.2699 13.0028L4 8.57698V17C4 17.5523 4.44772 18 5 18H19C19.5523 18 20 17.5523 20 17V8.57698Z" />
+        </svg>
+
+        <span id="toggle-label">Continue with Phone</span>
+      </button>
+
+      <!-- Already have account -->
+      <p class="text-sm text-center mt-6">
+        Already have an account?
+        <a href="#" onclick="replacePage('/login'); return false;" class="text-primary font-medium hover:underline">Sign in</a>
+      </p>
+
+    </div>
+  </main>
+
+  <div id="recaptcha-container"></div>
+
+  <script>
+    // Mobile menu toggle
+    const menuBtn = document.getElementById('menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    let menuOpen = false;
+    menuBtn?.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      mobileMenu.classList.toggle('max-h-0', !menuOpen);
+      mobileMenu.classList.toggle('max-h-60', menuOpen);
+    });
+
+    // Toggle between email and phone register
+    const toggleregisterMode = document.getElementById('toggle-register-mode');
+    const toggleLabel = document.getElementById('toggle-label');
+    const toggleIconPhone = document.getElementById('icon-email');
+    const toggleIconEmail = document.getElementById('icon-phone');
+    const emailregister = document.getElementById('email-register');
+    const phoneregister = document.getElementById('phone-register');
+
+    toggleregisterMode?.addEventListener('click', () => {
+      const isEmailVisible = !emailregister.classList.contains('hidden');
+
+      if (isEmailVisible) {
+        // Show phone register
+        emailregister.classList.add('hidden');
+        phoneregister.classList.remove('hidden');
+        toggleLabel.textContent = 'Continue with Email';
+        toggleIconPhone.classList.remove('hidden');
+        toggleIconEmail.classList.add('hidden');
+      } else {
+        // Show email register
+        phoneregister.classList.add('hidden');
+        emailregister.classList.remove('hidden');
+        toggleLabel.textContent = 'Continue with Phone';
+        toggleIconPhone.classList.add('hidden');
+        toggleIconEmail.classList.remove('hidden');
+      }
+    });
+
+    // Firebase initialization and OTP handling for phone register
+  const firebaseConfig = {
+    apiKey: "AIzaSyDZvQXmgnPD81cCdjVrgDn-QlaY_f5m2xE",
+    authDomain: "focusly-97e22.firebaseapp.com",
+    projectId: "focusly-97e22",
+    storageBucket: "focusly-97e22.firebasestorage.app",
+    messagingSenderId: "109369885144",
+    appId: "1:109369885144:web:1f5c3627c4c5f6d4b372ad",
+    measurementId: "G-8GCFDG9EKL"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
+  let recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+    size: 'invisible'
+  });
+
+  const sendOtpBtn = document.getElementById('send-otp-btn');
+  const verifyOtpBtn = document.getElementById('verify-otp-btn');
+  const phoneField = document.getElementById('phone-field');
+  const otpField = document.getElementById('otp-field');
+  const countrySelect = document.querySelector('select[name="country_code"]');
+  const otpMessage = document.getElementById('otp-message');
+  let confirmationResult;
+
+  function showOtpMessage(text, type = 'error') {
+    otpMessage.textContent = text;
+    otpMessage.className = 'text-sm mt-1 min-h-[1.5rem] ' + (type === 'success' ? 'text-green-600' : 'text-red-600');
+  }
+
+  sendOtpBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+
+    const countryCode = countrySelect.value;
+    const phoneNumber = phoneField.value.trim();
+    if (!phoneNumber || phoneNumber.length < 6) {
+      showOtpMessage("Please enter a valid mobile number.");
+      return;
+    }
+
+    const fullPhoneNumber = countryCode + phoneNumber;
+    sendOtpBtn.disabled = true;
+    sendOtpBtn.textContent = "Sending...";
+
+    auth.signInWithPhoneNumber(fullPhoneNumber, recaptchaVerifier)
+      .then(result => {
+        confirmationResult = result;
+        otpField.classList.remove('hidden');
+        verifyOtpBtn.classList.remove('hidden');
+        sendOtpBtn.classList.add('hidden');
+        showOtpMessage("OTP sent successfully. Please check your phone.", 'success');
+      })
+      .catch(error => {
+        showOtpMessage('Error sending OTP: ' + error.message);
+        recaptchaVerifier.clear();
+        recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+          size: 'invisible'
+        });
+        sendOtpBtn.disabled = false;
+        sendOtpBtn.textContent = "Get OTP";
+      });
+  });
+
+  verifyOtpBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    const otp = otpField.value.trim();
+
+    if (!otp || otp.length < 4) {
+      showOtpMessage("Please enter the OTP.");
+      return;
+    }
+
+    verifyOtpBtn.disabled = true;
+    verifyOtpBtn.textContent = "Verifying...";
+
+    confirmationResult.confirm(otp)
+      .then(result => {
+        showOtpMessage('Phone number verified successfully!', 'success');
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000);
+      })
+      .catch(err => {
+        showOtpMessage('Invalid OTP. Please try again.');
+        verifyOtpBtn.disabled = false;
+        verifyOtpBtn.textContent = "Verify OTP";
+      });
+  });
+</script>
+<script>
+  function replacePage(url) {
+    window.location.replace(url);
+  }
+</script>
+
+<script>
+  function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    if (field.type === "password") {
+      field.type = "text";
+    } else {
+      field.type = "password";
+    }
+  }
+</script>
+
+</body>
+</html>

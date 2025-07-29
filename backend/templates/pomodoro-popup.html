@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Floating Timer</title>
+  <link rel="icon" href="/static/images/logo.png" />
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      background: transparent;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #container {
+      position: relative;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      background-color: rgba(37, 99, 235, 0.15); /* default blue bg */
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+      transition: background-color 0.5s ease, box-shadow 0.5s ease;
+    }
+    svg {
+      width: 160px; height: 160px;
+      transform: rotate(-90deg);
+    }
+    circle {
+      fill: none;
+      stroke: #2563eb; /* default blue */
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 282.6;
+      stroke-dashoffset: 0;
+      transition: stroke 0.5s ease, stroke-dashoffset 1s linear;
+    }
+    #timerDisplay {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2.2rem;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      text-shadow: 0 0 8px rgba(0,0,0,0.6);
+    }
+
+
+    #progressCircle {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 282.6;
+  stroke-dashoffset: 0;
+  transition: stroke 0.5s ease, stroke-dashoffset 1s linear;
+}
+
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+  <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDZvQXmgnPD81cCdjVrgDn-QlaY_f5m2xE",
+    authDomain: "focusly-97e22.firebaseapp.com",
+    projectId: "focusly-97e22",
+    storageBucket: "focusly-97e22.firebasestorage.app",
+    messagingSenderId: "109369885144",
+    appId: "1:109369885144:web:1f5c3627c4c5f6d4b372ad",
+    measurementId: "G-8GCFDG9EKL"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.firestore();
+
+  const FULL_DASH_ARRAY = 282.6;
+  const POMODORO_SECONDS = 1500;
+  const BREAK_SECONDS = 300;
+
+  let circle = null;
+  let timerDisplay = null;
+  let container = null;
+
+  let localRemainingSeconds = POMODORO_SECONDS;
+  let currentMode = "work";
+  let countdownInterval = null;
+
+  function updateTimer(seconds, initialTime) {
+    if (!circle || !timerDisplay) return;
+    const percent = seconds / initialTime;
+    const offset = FULL_DASH_ARRAY * (1 - percent);
+    circle.style.strokeDashoffset = offset;
+
+    const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const s = String(seconds % 60).padStart(2, '0');
+    timerDisplay.textContent = `${m}:${s}`;
+  }
+
+  function updateColors(mode) {
+    if (!circle || !container) return;
+
+    if (mode === "break") {
+      console.log("🔄 Switching to BREAK mode"); // Debug
+      circle.style.stroke = "#22c55e"; // green
+      container.style.backgroundColor = "rgba(34, 197, 94, 0.15)";
+      container.style.boxShadow = "0 0 20px rgba(34, 197, 94, 0.4)";
+    } else {
+      console.log("🔄 Switching to WORK mode"); // Debug
+      circle.style.stroke = "#2563eb"; // blue
+      container.style.backgroundColor = "rgba(37, 99, 235, 0.15)";
+      container.style.boxShadow = "0 0 20px rgba(37, 99, 235, 0.4)";
+    }
+  }
+
+  function startLocalCountdown(initialTime) {
+    if (countdownInterval) return;
+
+    countdownInterval = setInterval(() => {
+      if (localRemainingSeconds > 0) {
+        localRemainingSeconds--;
+        updateTimer(localRemainingSeconds, initialTime);
+      } else {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+        // Optional: you can trigger a switch or sound here
+      }
+    }, 1000);
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    circle = document.getElementById('progressCircle');
+    timerDisplay = document.getElementById('timerDisplay');
+    container = document.getElementById('container');
+
+    if (!circle || !container || !timerDisplay) {
+      console.error("❌ One or more DOM elements are missing.");
+      return;
+    }
+
+    updateColors(currentMode);
+    updateTimer(localRemainingSeconds, POMODORO_SECONDS);
+    startLocalCountdown(POMODORO_SECONDS);
+
+    db.collection("timers").doc("pomodoro")
+      .onSnapshot(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (typeof data.remainingSeconds === "number" && typeof data.mode === "string") {
+            if (data.mode !== currentMode || Math.abs(data.remainingSeconds - localRemainingSeconds) > 1) {
+              if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+              }
+
+              currentMode = data.mode;
+              localRemainingSeconds = data.remainingSeconds;
+
+              const initialTime = currentMode === "break" ? BREAK_SECONDS : POMODORO_SECONDS;
+
+              updateColors(currentMode);
+              updateTimer(localRemainingSeconds, initialTime);
+              startLocalCountdown(initialTime);
+            }
+          }
+        }
+      }, err => {
+        console.error("Firestore error:", err);
+      });
+  });
+
+  window.addEventListener('message', (event) => {
+    if (event.data.type === 'updateTimer') {
+      const { seconds, initialTime, mode } = event.data;
+      if (typeof seconds === "number" && typeof initialTime === "number") {
+        localRemainingSeconds = seconds;
+        currentMode = mode || "work";
+        updateColors(currentMode);
+        updateTimer(localRemainingSeconds, initialTime);
+        startLocalCountdown(initialTime);
+      }
+    }
+  });
+</script>
+
+
+</head>
+<body>
+  <div id="container">
+    <svg>
+      <circle id="progressCircle" r="45" cx="80" cy="80"></circle>
+    </svg>
+    <div id="timerDisplay">25:00</div>
+  </div>
+</body>
+</html>

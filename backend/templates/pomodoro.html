@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <title>pomodoro – Focusly</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="/static/images/logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb'
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <style>
+    /* Make cursor pointer on nav buttons */
+    nav button {
+      cursor: pointer;
+    }
+
+
+    nav button.active {
+  background-color: #2563eb; /* Tailwind primary blue */
+  color: white;
+}
+
+nav button.active svg {
+  fill: white !important;
+}
+
+nav button.active {
+  background-color: #2563eb;
+  color: white;
+}
+nav button.active svg {
+  fill: white !important;
+}
+
+
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex">
+  <audio id="alertSound" src="/sounds/notification.mp3" preload="auto"></audio>
+<div id="statusMessage" class="mt-2 text-lg font-semibold text-green-600"></div>
+
+
+  <!-- Overlay for Mobile -->
+  <div id="mobile-sidebar" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="bg-white w-64 p-4 space-y-6 fixed inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-30 shadow-md flex flex-col">
+    
+    <!-- Productivity Box -->
+    <div class="bg-gray-100 p-4 rounded-lg shadow">
+      <h2 class="text-lg font-semibold mb-2">Check Productivity</h2>
+      <p id="prod-text" class="text-sm text-gray-600 mt-2">go to dashboard</p>
+    </div>
+
+    <!-- Menu -->
+    <nav class="space-y-2 flex-1 flex flex-col">
+      <button onclick="window.location.href='/dashboard'" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-100 transition">
+  <!-- dashboard SVG -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#85A2FF">
+    <path d="M20,8h0L14,2.74a3,3,0,0,0-4,0L4,8a3,3,0,0,0-1,2.26V19a3,3,0,0,0,3,3H18a3,3,0,0,0,3-3V10.25A3,3,0,0,0,20,8ZM14,20H10V15a1,1,0,0,1,1-1h2a1,1,0,0,1,1,1Zm5-1a1,1,0,0,1-1,1H16V15a3,3,0,0,0-3-3H11a3,3,0,0,0-3,3v5H6a1,1,0,0,1-1-1V10.25a1,1,0,0,1,.34-.75l6-5.25a1,1,0,0,1,1.32,0l6,5.25a1,1,0,0,1,.34.75Z"></path>
+  </svg>
+  Dashboard
+</button>
+
+<button onclick="window.location.href='/dashboard'" class="w-full flex items-center p-3 rounded-lg hover:bg-yellow-100 transition">
+  <!-- Pending Tasks SVG -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#F4FF5C">
+    <path d="M13,14H9a1,1,0,0,0,0,2h4a1,1,0,0,0,0-2ZM17,4H15.82A3,3,0,0,0,13,2H11A3,3,0,0,0,8.18,4H7A3,3,0,0,0,4,7V19a3,3,0,0,0,3,3H17a3,3,0,0,0,3-3V7A3,3,0,0,0,17,4ZM10,5a1,1,0,0,1,1-1h2a1,1,0,0,1,1,1V6H10Zm8,14a1,1,0,0,1-1,1H7a1,1,0,0,1-1-1V7A1,1,0,0,1,7,6H8V7A1,1,0,0,0,9,8h6a1,1,0,0,0,1-1V6h1a1,1,0,0,1,1,1Zm-3-9H9a1,1,0,0,0,0,2h6a1,1,0,0,0,0-2Z"></path>
+  </svg>
+  Pending Tasks
+</button>
+
+<button onclick="window.location.href='/dashboard'" class="w-full flex items-center p-3 rounded-lg hover:bg-green-100 transition">
+  <svg class="w-5 h-5 mr-3" fill="#34D399" viewBox="0 0 24 24">
+    <path d="M5 13l4 4L19 7" stroke="#065F46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  Completed Tasks
+</button>
+
+
+
+      <button id="nav-pomodoro" onclick="activateNav(this); window.location.href='/pomodoro'" class="active w-full flex items-center p-3 rounded-lg hover:bg-red-100 transition">
+
+  <!-- Pomodoro SVG -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#FF714A" id="stopwatch">
+    <path d="M18.3,8.59l.91-.9a1,1,0,0,0-1.42-1.42l-.9.91a8,8,0,0,0-9.79,0l-.91-.92A1,1,0,0,0,4.77,7.69l.92.91A7.92,7.92,0,0,0,4,13.5,8,8,0,1,0,18.3,8.59ZM12,19.5a6,6,0,1,1,6-6A6,6,0,0,1,12,19.5Zm-2-15h4a1,1,0,0,0,0-2H10a1,1,0,0,0,0,2Zm3,6a1,1,0,0,0-2,0v1.89a1.5,1.5,0,1,0,2,0Z"></path>
+  </svg>
+  Pomodoro
+</button>
+
+      <button onclick="window.location.href='/countdown'" class="w-full flex items-center p-3 rounded-lg hover:bg-purple-100 transition">
+  <!-- Countdown SVG -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#B25CFF">
+    <path d="M18.9917,21.002h-1V19.335a5.00057,5.00057,0,0,0-.29956-1.67773c-.01093-.02936-.0224-.05658-.03589-.08454a4.97694,4.97694,0,0,0-.66455-1.23675l-1.3999-1.86719a3.01933,3.01933,0,0,1-.6001-1.80078V11.6582a3.02108,3.02108,0,0,1,.87842-2.12109l.65722-.65723A4.94566,4.94566,0,0,0,17.92365,6.0415c.00054-.01391.008-.02551.008-.03955l-.00281-.01373a5.01836,5.01836,0,0,0,.06287-.64349V3.002h1a1,1,0,0,0,0-2h-14a1,1,0,0,0,0,2h1V5.34473a5.01836,5.01836,0,0,0,.06287.64349L6.05176,6.002c0,.014.00744.02564.008.03955a4.94571,4.94571,0,0,0,1.3963,2.83838l.65723.65723A3.02108,3.02108,0,0,1,8.9917,11.6582V12.668a3.02212,3.02212,0,0,1-.59961,1.80078L6.99121,16.33594a4.98221,4.98221,0,0,0-.66437,1.23718c-.0133.02771-.02472.05463-.03552.08368A5.00309,5.00309,0,0,0,5.9917,19.335v1.667h-1a1,1,0,0,0,0,2h14a1,1,0,0,0,0-2Zm-11-16v-2h8v2Zm.87842,2.46387A2.97036,2.97036,0,0,1,8.49323,7.002h6.99694a2.97094,2.97094,0,0,1-.37689.46387l-.65723.65723a4.9603,4.9603,0,0,0-1.42187,2.8789h-2.085A4.96025,4.96025,0,0,0,9.52734,8.123ZM9.99219,15.668a5.03688,5.03688,0,0,0,.98828-2.666h2.02246a5.03332,5.03332,0,0,0,.98877,2.666l1.00012,1.334H8.99133Zm5.99951,5.334h-8V19.335a2.954,2.954,0,0,1,.02722-.333h7.94556a2.954,2.954,0,0,1,.02722.333Z"/>
+  </svg>
+  Countdown
+</button>
+
+    </nav>
+
+    <!-- Logout Button -->
+
+
+    <!-- User Info Display -->
+<div id="user-info" class="text-sm text-gray-600 p-3 border-t border-gray-200">
+  Loading user info...
+</div>
+
+    <div class="mt-auto">
+      <button id="logout-btn" class="w-full flex items-center p-3 text-red-600 bg-white rounded-lg hover:bg-red-50 transition">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Signout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col lg:ml-64">
+    <!-- Header -->
+    <header class="w-full bg-white shadow-md py-4 px-6 flex justify-between items-center sticky top-0 z-10">
+      <div class="flex items-center space-x-3">
+        <img src="/static/images/logo.png" class="h-8 w-8" alt="Logo" />
+        <span class="font-bold text-lg">Focusly</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <!-- Updated Settings Icon -->
+        <!-- Settings Button -->
+
+        <button id="profile-btn" class="p-1 rounded-full overflow-hidden">
+          <img src="/static/images/default-avatar.png" class="h-8 w-8 rounded-full" alt="Profile" />
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Menu Button -->
+    <div class="lg:hidden px-4 pt-4">
+      <button class="p-2 bg-primary text-white rounded shadow" onclick="toggleSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Main Content Area -->
+<main class="flex-grow px-4 py-6 max-w-7xl mx-auto">
+  <div class="flex flex-col lg:flex-row gap-8">
+
+    <!-- Pomodoro/Stopwatch Timer Section (Left) -->
+    <div class="lg:w-2/3">
+      <div class="text-center">
+        <div class="flex justify-center mb-4">
+          <button id="pomoBtn" class="px-4 py-2 font-bold rounded-l active bg-blue-600 text-white">Pomo</button>
+          <button id="stopwatchBtn" class="px-4 py-2 font-bold rounded-r bg-gray-300 text-gray-800">Stopwatch</button>
+        </div>
+
+        <div class="text-gray-600 text-lg mb-6">Focus &gt;</div>
+
+        <div class="relative mx-auto" style="width: 250px; height: 250px;">
+          <svg class="absolute top-0 left-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" stroke="#e5e7eb" stroke-width="10" fill="none" />
+            <circle id="progressCircle" cx="50" cy="50" r="45" stroke="#2563eb" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="282.6" stroke-dashoffset="282.6" />
+          </svg>
+
+          <div id="timerDisplay" class="w-full h-full rounded-full flex items-center justify-center text-4xl font-bold text-gray-800">
+            25:00
+          </div>
+
+          <div id="tickMarks" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
+        </div>
+
+        <div class="mt-4 text-gray-700 font-medium">
+          Pomodoro Streak: <span id="streakCount">0</span>
+        </div>
+
+        <div class="mt-6 flex justify-center space-x-4">
+          <button id="startBtn" class="px-6 py-3 bg-blue-600 text-white rounded-full text-lg">Start</button>
+          <button id="resetBtn" class="px-6 py-3 bg-gray-300 text-gray-800 rounded-full text-lg">Reset</button>
+        </div>
+
+        <div class="mt-4 flex justify-center">
+          <button id="openPopupBtn" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700 shadow">
+            🪟 Show Floating Timer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pomodoro Info Panel (Right) -->
+    <div class="lg:w-1/3 bg-white shadow rounded-lg p-6 space-y-6">
+      <div>
+        <h2 class="text-xl font-semibold text-blue-700">About Pomodoro</h2>
+        <p class="text-gray-600 mt-2 text-sm">
+          The Pomodoro Technique is a time management method that uses 25-minute focused work intervals followed by short breaks.
+          It helps enhance concentration and reduce mental fatigue.
+        </p>
+        <p class="text-gray-600 mt-2 text-sm">
+          Work for 25 minutes, then take a 5-minute break.
+Repeat this cycle.
+After every third 25-minute session, take a longer 15-minute break.
+
+This method helps improve focus, reduce mental fatigue, and boost overall productivity by balancing deep work with intentional rest.
+        </p>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-green-700">💡 Pro Tip</h3>
+        <p id="pro-tip" class="text-gray-700 mt-2 text-sm">
+          <!-- Tip inserted by JavaScript -->
+        </p>
+      </div>
+    </div>
+
+  </div>
+</main>
+<script>
+  const tips = [
+  "Learn to use keyboard shortcuts to save time.",
+  "Work in focused intervals, rest in between.",
+  "Turn off notifications during focus time.",
+  "Break big tasks into smaller actionable steps.",
+  "Use the first Pomodoro to plan your day.",
+  "Review your accomplishments at the end of the day.",
+  "Batch similar tasks to avoid context switching.",
+  "Use ambient music to maintain deep focus.",
+  "Start your day with the most important task.",
+  "Declutter your workspace to reduce distractions.",
+  "Use a task manager to keep track of priorities.",
+  "Avoid multitasking — focus on one task at a time.",
+  "Block social media during work hours.",
+  "Schedule breaks to recharge your mind.",
+  "Set clear daily goals every morning.",
+  "Use the 2-minute rule: do small tasks immediately.",
+  "Practice deep work for uninterrupted focus.",
+  "Keep a water bottle nearby and stay hydrated.",
+  "Use noise-cancelling headphones in noisy environments.",
+  "Avoid checking email first thing in the morning.",
+  "Use a to-do list and stick to it.",
+  "End your day by planning the next one.",
+  "Take short walks to reset your mind.",
+  "Use calendar blocking to plan your day.",
+  "Try digital minimalism — reduce app usage.",
+  "Use the Eisenhower matrix to prioritize tasks.",
+  "Eliminate or delegate non-essential tasks.",
+  "Create routines for your morning and evening.",
+  "Don’t strive for perfection — aim for progress.",
+  "Take screen breaks every 60 minutes.",
+  "Keep a journal to reflect on your productivity.",
+  "Organize files and documents for quick access.",
+  "Create a distraction list for later.",
+  "Automate repetitive tasks where possible.",
+  "Use browser extensions to block distracting sites.",
+  "Maintain consistent sleep habits.",
+  "Start with a win — finish a small task early.",
+  "Avoid overcommitting to meetings and tasks.",
+  "Do your most creative work when your energy peaks.",
+  "Use templates to save time on recurring work.",
+  "Track your time to find patterns in productivity.",
+  "Check email only at scheduled times.",
+  "Create a separate space for work and relaxation.",
+  "Set a deadline even for open-ended tasks.",
+  "Minimize open browser tabs while working.",
+  "Celebrate small wins to stay motivated.",
+  "Limit decision fatigue by simplifying choices.",
+  "Focus on value, not busyness.",
+  "Unsubscribe from unnecessary emails.",
+  "Organize your digital workspace weekly.",
+  "Say “no” more often to protect your focus.",
+  "Learn keyboard shortcuts for your tools.",
+  "Use voice notes for quick idea capture.",
+  "Turn off auto-sync notifications.",
+  "Create theme days for types of tasks.",
+  "Plan weekly reviews every Sunday evening.",
+  "Use cloud storage to access files easily.",
+  "Take advantage of offline time to think.",
+  "Write down distracting thoughts, deal with them later.",
+  "Avoid meetings with no clear agenda.",
+  "Color-code your calendar by task type.",
+  "Start your day with 5 minutes of stillness.",
+  "Invest in ergonomic furniture for comfort.",
+  "Use visual task boards like Kanban.",
+  "Group similar tasks and batch-process them.",
+  "Keep a list of tasks you can do in 5 minutes.",
+  "End each work session with a small win.",
+  "Use dual monitors for more screen space.",
+  "Set up auto-replies when deep working.",
+  "Outsource what you can’t or shouldn't do.",
+  "Time-block your lunch and rest time too.",
+  "Don't wait for motivation — start with action.",
+  "Use timers to enforce focused work sprints.",
+  "Use the “5 Whys” technique to understand problems.",
+  "Review your goals monthly.",
+  "Use strong passwords and a password manager.",
+  "Limit how often you check your phone.",
+  "Keep your desk minimal — only essentials.",
+  "Learn to touch type to boost writing speed.",
+  "Reduce caffeine late in the day.",
+  "Put your phone on silent while working.",
+  "Use bookmarks for frequently visited tools.",
+  "Do your toughest task when you’re most alert.",
+  "Use sticky notes for visual reminders.",
+  "Block notifications during meetings.",
+  "Audit your time weekly.",
+  "Use a whiteboard for visual brainstorming.",
+  "Practice saying “I’ll think about it” before agreeing.",
+  "Declutter your inbox regularly.",
+  "Use cloud notes to sync across devices.",
+  "Learn to say no without guilt.",
+  "Use offline time to plan ideas.",
+  "Set clear boundaries for work hours.",
+  "Don’t aim for zero inbox, aim for clarity.",
+  "Use breaks for non-screen activities.",
+  "Mute unnecessary Slack or Teams channels.",
+  "Turn off read receipts where not needed.",
+  "Uninstall apps that don’t serve a purpose.",
+  "Silence your phone during Pomodoro sessions.",
+  "Prepare your workspace the night before.",
+  "Plan your day around energy, not the clock.",
+  "Keep a low-information diet.",
+  "Use gratitude to stay motivated.",
+  "Try the 10-10-10 rule for quick decisions.",
+  "Reflect weekly on what’s working and what’s not.",
+  "Use tags or labels to organize digital notes.",
+  "Always be learning — make time to read.",
+  "Don’t schedule every minute — leave margin.",
+  "Use mind maps for planning complex tasks.",
+  "Have a shutdown routine at the end of workday.",
+  "Trust your system — don’t keep tasks in your head.",
+  "Focus on outputs, not just hours worked."
+];
+
+  const tipEl = document.getElementById('pro-tip');
+  if (tipEl) {
+    const randomTip = tips[Math.floor(Math.random() * tips.length)];
+    tipEl.textContent = randomTip;
+  }
+</script>
+
+
+<script>
+  // Constants
+  const FULL_DASH_ARRAY = 2 * Math.PI * 45;
+
+  // DOM Elements
+  const progressCircle = document.getElementById('progressCircle');
+  const resetBtn = document.getElementById('resetBtn');
+  const pomoBtn = document.getElementById('pomoBtn');
+  const stopwatchBtn = document.getElementById('stopwatchBtn');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const tickMarks = document.getElementById('tickMarks');
+  const startBtn = document.getElementById('startBtn');
+  const streakEl = document.getElementById('streakCount');
+
+  // Mode flag to know which timer is shown
+  let mode = 'pomo';
+
+  // Separate timers and states for Pomodoro and Stopwatch
+  let pomo = {
+    seconds: 1500,
+    initial: 1500,
+    isRunning: false,
+    breakMode: false,
+    pomodoroCount: 0,
+    timerId: null,
+  };
+
+  let stopwatch = {
+    seconds: 0,
+    isRunning: false,
+    timerId: null,
+  };
+
+  // Firebase Setup (keep as-is)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDZvQXmgnPD81cCdjVrgDn-QlaY_f5m2xE",
+    authDomain: "focusly-97e22.firebaseapp.com",
+    projectId: "focusly-97e22",
+    storageBucket: "focusly-97e22.appspot.com",
+    messagingSenderId: "109369885144",
+    appId: "1:109369885144:web:1f5c3627c4c5f6d4b372ad",
+    measurementId: "G-8GCFDG9EKL"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // Format seconds to MM:SS
+  function formatTime(sec) {
+    const m = String(Math.floor(sec / 60)).padStart(2, '0');
+    const s = String(sec % 60).padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  // Update progress circle for Pomodoro
+  function updateProgress(initialTime, currentTime) {
+    const percent = currentTime / initialTime;
+    const offset = FULL_DASH_ARRAY * (1 - percent);
+    if (progressCircle) progressCircle.style.strokeDashoffset = offset;
+  }
+
+  // Draw ticks for Stopwatch mode
+  function drawTicks() {
+    if (!tickMarks) return;
+    tickMarks.innerHTML = '';
+    for (let i = 0; i < 60; i++) {
+      const tick = document.createElement('div');
+      tick.style.width = '2px';
+      tick.style.height = '8px';
+      tick.style.background = '#999';
+      tick.style.position = 'absolute';
+      tick.style.top = '0';
+      tick.style.left = '50%';
+      tick.style.transform = `rotate(${i * 6}deg) translateY(10px)`;
+      tick.style.transformOrigin = 'bottom center';
+      tickMarks.appendChild(tick);
+    }
+  }
+
+  // Update display according to current mode
+  function updateDisplay() {
+    if (!timerDisplay) return;
+
+    if (mode === 'pomo') {
+      timerDisplay.textContent = formatTime(pomo.seconds);
+      if (tickMarks) tickMarks.innerHTML = '';
+      updateProgress(pomo.initial, pomo.seconds);
+      // Update progress circle color based on break mode
+      if (progressCircle)
+        progressCircle.setAttribute('stroke', pomo.breakMode ? '#22c55e' : '#2563eb');
+      if (streakEl) streakEl.textContent = pomo.pomodoroCount;
+    } else {
+      timerDisplay.textContent = formatTime(stopwatch.seconds);
+      if (tickMarks) drawTicks();
+      if (progressCircle)
+        progressCircle.style.strokeDashoffset = 0;  // no progress for stopwatch
+      if (streakEl) streakEl.textContent = ''; // no pomodoro count for stopwatch
+    }
+
+    // Animate timerDisplay briefly
+    timerDisplay.classList.add('animate-complete');
+    setTimeout(() => timerDisplay.classList.remove('animate-complete'), 2000);
+  }
+
+  // Save Pomodoro state to Firebase & localStorage
+  async function savePomodoroState(uid) {
+    try {
+      await db.collection('pomodoroTimers').doc(uid).set({
+        seconds: pomo.seconds,
+        isRunning: pomo.isRunning,
+        breakMode: pomo.breakMode,
+        pomodoroCount: pomo.pomodoroCount,
+        initialTime: pomo.initial,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      // Also save locally
+      localStorage.setItem('pomoState', JSON.stringify({
+        seconds: pomo.seconds,
+        isRunning: pomo.isRunning,
+        breakMode: pomo.breakMode,
+        pomodoroCount: pomo.pomodoroCount,
+        initial: pomo.initial,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error("Failed to save Pomodoro state:", error);
+    }
+  }
+
+  // Save Stopwatch state to Firebase & localStorage
+  async function saveStopwatchState(uid) {
+    try {
+      await db.collection('stopwatchTimers').doc(uid).set({
+        seconds: stopwatch.seconds,
+        isRunning: stopwatch.isRunning,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      // Also save locally
+      localStorage.setItem('stopwatchState', JSON.stringify({
+        seconds: stopwatch.seconds,
+        isRunning: stopwatch.isRunning,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error("Failed to save Stopwatch state:", error);
+    }
+  }
+
+  // Load Pomodoro state from Firebase or localStorage
+  async function loadPomodoroState(uid) {
+    try {
+      const docRef = db.collection('pomodoroTimers').doc(uid);
+      const docSnap = await docRef.get();
+
+      if (docSnap.exists) {
+        const data = docSnap.data();
+        const now = new Date();
+        const savedTime = data.timestamp?.toDate?.();
+        const elapsed = savedTime ? Math.floor((now - savedTime) / 1000) : 0;
+
+        pomo.seconds = Math.max(0, data.seconds - (data.isRunning ? elapsed : 0));
+        pomo.isRunning = data.isRunning;
+        pomo.breakMode = data.breakMode;
+        pomo.pomodoroCount = data.pomodoroCount;
+        pomo.initial = data.initialTime || 1500;
+      } else {
+        // Try loading from localStorage
+        const localData = JSON.parse(localStorage.getItem('pomoState'));
+        if (localData) {
+          const elapsed = Math.floor((Date.now() - localData.timestamp) / 1000);
+          pomo.seconds = Math.max(0, localData.seconds - (localData.isRunning ? elapsed : 0));
+          pomo.isRunning = localData.isRunning;
+          pomo.breakMode = localData.breakMode;
+          pomo.pomodoroCount = localData.pomodoroCount;
+          pomo.initial = localData.initial || 1500;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load Pomodoro state:', error);
+    }
+  }
+
+  // Load Stopwatch state from Firebase or localStorage
+  async function loadStopwatchState(uid) {
+    try {
+      const docRef = db.collection('stopwatchTimers').doc(uid);
+      const docSnap = await docRef.get();
+
+      if (docSnap.exists) {
+        const data = docSnap.data();
+        const now = new Date();
+        const savedTime = data.timestamp?.toDate?.();
+        const elapsed = savedTime ? Math.floor((now - savedTime) / 1000) : 0;
+
+        stopwatch.seconds = data.seconds + (data.isRunning ? elapsed : 0);
+        stopwatch.isRunning = data.isRunning;
+      } else {
+        // Try localStorage
+        const localData = JSON.parse(localStorage.getItem('stopwatchState'));
+        if (localData) {
+          const elapsed = Math.floor((Date.now() - localData.timestamp) / 1000);
+          stopwatch.seconds = localData.seconds + (localData.isRunning ? elapsed : 0);
+          stopwatch.isRunning = localData.isRunning;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load Stopwatch state:', error);
+    }
+  }
+
+  // Start Pomodoro timer logic
+  function startPomodoroTimer(uid) {
+    if (pomo.timerId) clearInterval(pomo.timerId);
+
+    pomo.timerId = setInterval(() => {
+      if (!pomo.breakMode) {
+        if (pomo.seconds > 0) {
+          pomo.seconds--;
+          updateDisplay();
+        } else {
+          pomo.pomodoroCount++;
+          if (streakEl) streakEl.textContent = pomo.pomodoroCount;
+          pomo.breakMode = true;
+          if (progressCircle) progressCircle.setAttribute('stroke', '#22c55e');
+          pomo.seconds = (pomo.pomodoroCount % 4 === 0) ? 15 * 60 : 5 * 60;
+          pomo.initial = pomo.seconds;
+          updateDisplay();
+          if (uid) savePomodoroState(uid);
+        }
+      } else {
+        if (pomo.seconds > 0) {
+          pomo.seconds--;
+          updateDisplay();
+        } else {
+          pomo.breakMode = false;
+          if (progressCircle) progressCircle.setAttribute('stroke', '#2563eb');
+          pomo.seconds = 25 * 60;
+          pomo.initial = pomo.seconds;
+          updateDisplay();
+          if (uid) savePomodoroState(uid);
+        }
+      }
+    }, 1000);
+  }
+
+  // Start Stopwatch timer logic
+  function startStopwatchTimer(uid) {
+    if (stopwatch.timerId) clearInterval(stopwatch.timerId);
+
+    stopwatch.timerId = setInterval(() => {
+      stopwatch.seconds++;
+      updateDisplay();
+      if (uid) saveStopwatchState(uid);
+    }, 1000);
+  }
+
+  // Stop Pomodoro timer
+  function stopPomodoroTimer(uid) {
+    if (pomo.timerId) clearInterval(pomo.timerId);
+    if (uid) savePomodoroState(uid);
+  }
+
+  // Stop Stopwatch timer
+  function stopStopwatchTimer(uid) {
+    if (stopwatch.timerId) clearInterval(stopwatch.timerId);
+    if (uid) saveStopwatchState(uid);
+  }
+
+  // UI Mode Switch
+  function switchMode(newMode) {
+    mode = newMode;
+
+    if (mode === 'pomo') {
+      pomoBtn.classList.add('bg-blue-600', 'text-white');
+      pomoBtn.classList.remove('bg-gray-300', 'text-gray-800');
+      stopwatchBtn.classList.remove('bg-blue-600', 'text-white');
+      stopwatchBtn.classList.add('bg-gray-300', 'text-gray-800');
+
+      // Update Start button text to current Pomodoro state
+      if (pomo.isRunning) {
+        startBtn.textContent = 'Pause';
+      } else {
+        startBtn.textContent = 'Start';
+      }
+    } else {
+      stopwatchBtn.classList.add('bg-blue-600', 'text-white');
+      stopwatchBtn.classList.remove('bg-gray-300', 'text-gray-800');
+      pomoBtn.classList.remove('bg-blue-600', 'text-white');
+      pomoBtn.classList.add('bg-gray-300', 'text-gray-800');
+
+      // Update Start button text to current Stopwatch state
+      if (stopwatch.isRunning) {
+        startBtn.textContent = 'Pause';
+      } else {
+        startBtn.textContent = 'Start';
+      }
+    }
+
+    updateDisplay();
+  }
+
+  // Event Listeners
+  if (pomoBtn && stopwatchBtn && startBtn && resetBtn) {
+    pomoBtn.addEventListener('click', () => switchMode('pomo'));
+
+    stopwatchBtn.addEventListener('click', () => switchMode('stopwatch'));
+
+    startBtn.addEventListener('click', () => {
+      if (mode === 'pomo') {
+        if (!pomo.isRunning) {
+          pomo.isRunning = true;
+          startBtn.textContent = 'Pause';
+          startPomodoroTimer(auth.currentUser?.uid);
+        } else {
+          pomo.isRunning = false;
+          startBtn.textContent = 'Resume';
+          stopPomodoroTimer(auth.currentUser?.uid);
+        }
+      } else {
+        if (!stopwatch.isRunning) {
+          stopwatch.isRunning = true;
+          startBtn.textContent = 'Pause';
+          startStopwatchTimer(auth.currentUser?.uid);
+        } else {
+          stopwatch.isRunning = false;
+          startBtn.textContent = 'Resume';
+          stopStopwatchTimer(auth.currentUser?.uid);
+        }
+      }
+    });
+
+        resetBtn.addEventListener('click', () => {
+      if (mode === 'pomo') {
+        stopPomodoroTimer(auth.currentUser?.uid);
+        pomo.isRunning = false;
+        pomo.breakMode = false;
+        pomo.seconds = 25 * 60;
+        pomo.initial = 25 * 60;
+        pomo.pomodoroCount = 0;
+        if (streakEl) streakEl.textContent = pomo.pomodoroCount;
+        updateDisplay();
+        startBtn.textContent = "Start";
+        if (auth.currentUser) savePomodoroState(auth.currentUser.uid);
+      } else {
+        // Stopwatch reset
+        stopStopwatchTimer(auth.currentUser?.uid);
+        stopwatch.isRunning = false;
+        stopwatch.seconds = 0;
+        updateDisplay();
+        startBtn.textContent = "Start";
+        if (auth.currentUser) saveStopwatchState(auth.currentUser.uid);
+      }
+    });
+  }
+
+  // On auth state changed - load states & start timers if needed
+  auth.onAuthStateChanged(async user => {
+  if (user) {
+    // ✅ Show user email, and UID
+    const userInfoDiv = document.getElementById('user-info');
+    const email = user.email || 'No email';
+    const uid = user.uid;
+
+    if (userInfoDiv) {
+      userInfoDiv.innerHTML = `
+        <p><strong>Email:</strong> ${email}</p>
+        <p><small>User ID: ${uid}</small></p>
+      `;
+    }
+
+    await loadPomodoroState(user.uid);
+    await loadStopwatchState(user.uid);
+
+    updateDisplay();
+
+    // Start Pomodoro timer if running
+    if (pomo.isRunning) {
+      startPomodoroTimer(user.uid);
+      if (mode === 'pomo') startBtn.textContent = "Pause";
+    } else if (mode === 'pomo') {
+      startBtn.textContent = "Start";
+    }
+
+    // Start Stopwatch timer if running
+    if (stopwatch.isRunning) {
+      startStopwatchTimer(user.uid);
+      if (mode === 'stopwatch') startBtn.textContent = "Pause";
+    } else if (mode === 'stopwatch') {
+      startBtn.textContent = "Start";
+    }
+
+    // Save periodically both timers every 5 seconds
+    setInterval(() => {
+      if (pomo.isRunning) savePomodoroState(user.uid);
+      if (stopwatch.isRunning) saveStopwatchState(user.uid);
+    }, 5000);
+
+  } else {
+    // No user - optionally clear timers or load from localStorage
+    const localPomo = JSON.parse(localStorage.getItem('pomoState'));
+    if (localPomo) {
+      pomo = {
+        seconds: localPomo.seconds,
+        isRunning: false, // do not auto-run for anonymous
+        breakMode: localPomo.breakMode,
+        pomodoroCount: localPomo.pomodoroCount,
+        initial: localPomo.initial || 1500,
+        timerId: null,
+      };
+    }
+
+    const localStopwatch = JSON.parse(localStorage.getItem('stopwatchState'));
+    if (localStopwatch) {
+      stopwatch = {
+        seconds: localStopwatch.seconds,
+        isRunning: false,
+        timerId: null,
+      };
+    }
+
+    updateDisplay();
+    startBtn.textContent = "Start";
+  }
+});
+
+
+  // Navigation Highlight (unchanged)
+  window.addEventListener('DOMContentLoaded', () => {
+    const currentPath = window.location.pathname;
+    const navMap = {
+      '/': 'nav-all',
+      '/pending': 'nav-pending',
+      '/completed': 'nav-completed',
+      '/pomodoro': 'nav-pomodoro',
+      '/countdown': 'nav-countdown'
+    };
+    const activeId = navMap[currentPath];
+    if (activeId) {
+      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(activeId);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+  });
+
+  // Logout button (unchanged)
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut()
+        .then(() => {
+          window.location.href = '/logout';
+        })
+        .catch(error => {
+          console.error('Error signing out:', error);
+          alert('Failed to sign out. Please try again.');
+        });
+    });
+  }
+
+  // Initial display update
+  updateDisplay();
+</script>
+
+
+<script>
+  let popupWindow = null;
+let timerSyncInterval = null;
+
+function openPomodoroPopup() {
+  if (popupWindow && !popupWindow.closed) {
+    popupWindow.focus();
+    return;
+  }
+
+  const width = 170;
+  const height = 170;
+  const left = window.screenX + window.innerWidth - width - 20;
+  const top = window.screenY + 20;
+
+  popupWindow = window.open(
+    '/pomodoro-popup',
+    'PomodoroPopup',
+    `width=${width},height=${height},left=${left},top=${top},` +
+    'resizable=no,toolbar=no,menubar=no,scrollbars=no,status=no'
+  );
+
+  function sendTimerToPopup() {
+    if (!popupWindow || popupWindow.closed) {
+      clearInterval(timerSyncInterval);
+      return;
+    }
+    
+    // Assuming you have variables keeping track of timer state:
+    // For example: pomo.seconds, pomo.initial, etc.
+    let seconds = pomo.seconds; // or your current timer seconds
+    let initialTime = pomo.initial; // or your timer initial duration
+    
+    popupWindow.postMessage({
+      type: 'updateTimer',
+      seconds,
+      initialTime
+    }, '*');
+  }
+
+  timerSyncInterval = setInterval(sendTimerToPopup, 1000);
+  sendTimerToPopup(); // send immediately once
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const popupBtn = document.getElementById('openPopupBtn');
+  if (popupBtn) popupBtn.addEventListener('click', openPomodoroPopup);
+});
+
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('mobile-sidebar');
+
+  if (sidebar && overlay) {
+    // Toggle sidebar visibility
+    sidebar.classList.toggle('-translate-x-full');
+    overlay.classList.toggle('hidden');
+  } else {
+    console.warn('Sidebar or overlay not found');
+  }
+}
+
+
+
+</script>
+
+
+
+</body>
+</html>

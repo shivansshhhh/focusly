@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redirecting...</title>
+  <style>
+    body {
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    /* Logo style */
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 30px;
+      /* Use your logo URL or inline svg */
+      background: url('/static/images/logo.png') no-repeat center;
+      background-size: contain;
+    }
+    /* Blinking dots container */
+    .dots {
+      font-size: 30px;
+      letter-spacing: 10px;
+      color: #333;
+      user-select: none;
+    }
+    .dot {
+      animation: blink 1.5s infinite;
+      opacity: 0.3;
+    }
+    .dot:nth-child(1) {
+      animation-delay: 0s;
+    }
+    .dot:nth-child(2) {
+      animation-delay: 0.3s;
+    }
+    .dot:nth-child(3) {
+      animation-delay: 0.6s;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo"></div>
+  <div class="dots">
+    <span class="dot">.</span>
+    <span class="dot">.</span>
+    <span class="dot">.</span>
+  </div>
+
+  <script>
+    // Delay before redirect (in milliseconds)
+    const redirectDelay = 1000; // 1.0 seconds
+
+    // Target URL passed from Flask template
+    const targetUrl = "{{ target }}";
+
+    // Redirect after delay
+    setTimeout(() => {
+      window.location.replace(targetUrl);
+    }, redirectDelay);
+  </script>
+</body>
+</html>

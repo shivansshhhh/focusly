@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <title>pomodoro – Focusly</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="/static/images/logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* Make cursor pointer on nav buttons */
+    nav button {
+      cursor: pointer;
+    }
+
+
+    nav button.active {
+  background-color: #2563eb; /* Tailwind primary blue */
+  color: white;
+}
+
+nav button.active svg {
+  fill: white !important;
+}
+
+nav button.active {
+  background-color: #2563eb;
+  color: white;
+}
+nav button.active svg {
+  fill: white !important;
+}
+
+
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex">
+  <audio id="alertSound" src="/sounds/notification.mp3" preload="auto"></audio>
+<div id="statusMessage" class="mt-2 text-lg font-semibold text-green-600"></div>
+
+
+  <!-- Overlay for Mobile -->
+  <div id="mobile-sidebar" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="bg-white w-64 p-4 space-y-6 fixed inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-30 shadow-md flex flex-col">
+    
+    <!-- Productivity Box -->
+    <div class="bg-gray-100 p-4 rounded-lg shadow">
+      <h2 class="text-lg font-semibold mb-2">Check Productivity</h2>
+      <p id="prod-text" class="text-sm text-gray-600 mt-2">go to dashboard</p>
+    </div>
+
+    <!-- Menu -->
+    <nav class="space-y-2 flex-1 flex flex-col">
+      <button onclick="window.location.href='/dashboard'" class="w-full flex items-center p-3 rounded-lg hover:bg-blue-100 transition">
+  <!-- dashboard SVG -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#85A2FF">
+    <path d="M20,8h0L14,2.74a3,3,0,0,0-4,0L4,8a3,3,0,0,0-1,2.26V19a3,3,0,0,0,3,3H18a3,3,0,0,0,3-3V10.25A3,3,0,0,0,20,8ZM14,20H10V15a1,1,0,0,1,1-1h2a1,1,0,0,1,1,1Zm5-1a1,1,0,0,1-1,1H16V15a3,3,0,0,0-3-3H11a3,3,0,0,0-3,3v5H6a1,1,0,0,1-1-1V10.25a1,1,0,0,1,.34-.75l6-5.25a1,1,0,0,1,1.32,0l6,5.25a1,1,0,0,1,.34.75Z"></path>
+  </svg>
+  Dashboard
+</button>
+
+<button onclick="window.location.href='/dashboard'" class="w-full flex items-center p-3 rounded-lg hover:bg-yellow-100 transition">
+  <!-- Pending Tasks SVG -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#F4FF5C">
+    <path d="M13,14H9a1,1,0,0,0,0,2h4a1,1,0,0,0,0-2ZM17,4H15.82A3,3,0,0,0,13,2H11A3,3,0,0,0,8.18,4H7A3,3,0,0,0,4,7V19a3,3,0,0,0,3,3H17a3,3,0,0,0,3-3V7A3,3,0,0,0,17,4ZM10,5a1,1,0,0,1,1-1h2a1,1,0,0,1,1,1V6H10Zm8,14a1,1,0,0,1-1,1H7a1,1,0,0,1-1-1V7A1,1,0,0,1,7,6H8V7A1,1,0,0,0,9,8h6a1,1,0,0,0,1-1V6h1a1,1,0,0,1,1,1Zm-3-9H9a1,1,0,0,0,0,2h6a1,1,0,0,0,0-2Z"></path>
+  </svg>
+  Pending Tasks
+</button>
+
+<button onclick="window.location.href='/dashboard'" class="w-full flex items-center p-3 rounded-lg hover:bg-green-100 transition">
+  <svg class="w-5 h-5 mr-3" fill="#34D399" viewBox="0 0 24 24">
+    <path d="M5 13l4 4L19 7" stroke="#065F46" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  Completed Tasks
+</button>
+
+
+
+      <!-- Pomodoro Button -->
+<button onclick="window.location.href='/pomodoro'" class="w-full flex items-center p-3 rounded-lg hover:bg-red-100 transition">
+  <!-- Pomodoro SVG -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#FF714A" id="stopwatch">
+    <path d="M18.3,8.59l.91-.9a1,1,0,0,0-1.42-1.42l-.9.91a8,8,0,0,0-9.79,0l-.91-.92A1,1,0,0,0,4.77,7.69l.92.91A7.92,7.92,0,0,0,4,13.5,8,8,0,1,0,18.3,8.59ZM12,19.5a6,6,0,1,1,6-6A6,6,0,0,1,12,19.5Zm-2-15h4a1,1,0,0,0,0-2H10a1,1,0,0,0,0,2Zm3,6a1,1,0,0,0-2,0v1.89a1.5,1.5,0,1,0,2,0Z"></path>
+  </svg>
+  Pomodoro
+</button>
+<!-- Countdown Button (active, no redirect) -->
+<button class="active w-full flex items-center p-3 rounded-lg hover:bg-purple-100 transition">
+  <!-- Countdown SVG -->
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 mr-3" fill="#B25CFF">
+    <path d="M18.9917,21.002h-1V19.335a5.00057,5.00057,0,0,0-.29956-1.67773c-.01093-.02936-.0224-.05658-.03589-.08454a4.97694,4.97694,0,0,0-.66455-1.23675l-1.3999-1.86719a3.01933,3.01933,0,0,1-.6001-1.80078V11.6582a3.02108,3.02108,0,0,1,.87842-2.12109l.65722-.65723A4.94566,4.94566,0,0,0,17.92365,6.0415c.00054-.01391.008-.02551.008-.03955l-.00281-.01373a5.01836,5.01836,0,0,0,.06287-.64349V3.002h1a1,1,0,0,0,0-2h-14a1,1,0,0,0,0,2h1V5.34473a5.01836,5.01836,0,0,0,.06287.64349L6.05176,6.002c0,.014.00744.02564.008.03955a4.94571,4.94571,0,0,0,1.3963,2.83838l.65723.65723A3.02108,3.02108,0,0,1,8.9917,11.6582V12.668a3.02212,3.02212,0,0,1-.59961,1.80078L6.99121,16.33594a4.98221,4.98221,0,0,0-.66437,1.23718c-.0133.02771-.02472.05463-.03552.08368A5.00309,5.00309,0,0,0,5.9917,19.335v1.667h-1a1,1,0,0,0,0,2h14a1,1,0,0,0,0-2Zm-11-16v-2h8v2Zm.87842,2.46387A2.97036,2.97036,0,0,1,8.49323,7.002h6.99694a2.97094,2.97094,0,0,1-.37689.46387l-.65723.65723a4.9603,4.9603,0,0,0-1.42187,2.8789h-2.085A4.96025,4.96025,0,0,0,9.52734,8.123ZM9.99219,15.668a5.03688,5.03688,0,0,0,.98828-2.666h2.02246a5.03332,5.03332,0,0,0,.98877,2.666l1.00012,1.334H8.99133Zm5.99951,5.334h-8V19.335a2.954,2.954,0,0,1,.02722-.333h7.94556a2.954,2.954,0,0,1,.02722.333Z"/>
+  </svg>
+  Countdown
+</button>
+
+    </nav>
+
+    <!-- Logout Button -->
+
+
+    <!-- User Info Display -->
+<div id="user-info" class="text-sm text-gray-600 p-3 border-t border-gray-200">
+  Loading user info...
+</div>
+
+    <div class="mt-auto">
+      <button id="logout-btn" class="w-full flex items-center p-3 text-red-600 bg-white rounded-lg hover:bg-red-50 transition">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Signout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col lg:ml-64">
+    <!-- Header -->
+    <header class="w-full bg-white shadow-md py-4 px-6 flex justify-between items-center sticky top-0 z-10">
+      <div class="flex items-center space-x-3">
+        <img src="/static/images/logo.png" class="h-8 w-8" alt="Logo" />
+        <span class="font-bold text-lg">Focusly</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <!-- Updated Settings Icon -->
+        <!-- Settings Button -->
+
+        <button id="profile-btn" class="p-1 rounded-full overflow-hidden">
+          <img src="/static/images/default-avatar.png" class="h-8 w-8 rounded-full" alt="Profile" />
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Menu Button -->
+    <div class="lg:hidden px-4 pt-4">
+      <button class="p-2 bg-primary text-white rounded shadow" onclick="toggleSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+
+
+    <main class="p-6 space-y-8">
+
+        <div id="notifications" class="bg-white p-4 rounded-lg shadow text-center">
+  <h2 class="text-lg font-bold mb-2 text-gray-800">🎊 Notifications</h2>
+  <div id="today-notification" class="text-gray-600 text-sm">
+    Loading...
+  </div>
+</div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-white p-4 rounded-lg shadow text-center">
+      <p class="text-sm text-gray-500">New Year Countdown</p>
+      <h2 id="new-year-countdown" class="text-2xl font-bold text-primary">Loading...</h2>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow text-center">
+      <p class="text-sm text-gray-500">Weekend Countdown</p>
+      <h2 id="weekend-countdown" class="text-2xl font-bold text-primary">Loading...</h2>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow text-center">
+      <p class="text-sm text-gray-500">Days Using Focusly</p>
+      <h2 id="usage-days" class="text-2xl font-bold text-primary">0 days</h2>
+    </div>
+  </div>
+
+<!-- Special Dates -->
+<div class="bg-white p-6 rounded-lg shadow">
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-xl font-semibold text-gray-800">Your Special Dates</h3>
+    <button id="openAddDateBtn" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700">Add Date</button>
+  </div>
+  <ul id="special-dates-list" class="space-y-3">
+    <!-- Special dates will render here -->
+  </ul>
+</div>
+</main>
+
+<!-- Modal for Adding Special Date -->
+<div id="addDateModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-lg p-6 w-full max-w-md space-y-4 shadow-lg">
+    <h2 class="text-xl font-bold text-gray-800">Add Special Date</h2>
+    <input id="date-title" type="text" class="w-full border rounded px-3 py-2" placeholder="Title (e.g., John’s Birthday)" />
+    <input id="date-value" type="date" class="w-full border rounded px-3 py-2" />
+    <div class="flex justify-end space-x-3">
+      <button id="cancelAddDateBtn" class="px-4 py-2 border rounded">Cancel</button>
+      <button id="saveAddDateBtn" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
+    </div>
+  </div>
+</div>
+
+
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZvQXmgnPD81cCdjVrgDn-QlaY_f5m2xE",
+      authDomain: "focusly-97e22.firebaseapp.com",
+      projectId: "focusly-97e22",
+      storageBucket: "focusly-97e22.appspot.com",
+      messagingSenderId: "109369885144",
+      appId: "1:109369885144:web:1f5c3627c4c5f6d4b372ad",
+      measurementId: "G-8GCFDG9EKL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const startDateKey = "focuslyStart";
+    const localDatesKey = "specialDates";
+
+    const userDocRef = () => {
+      const user = auth.currentUser;
+      return user ? doc(db, "countdowns", user.uid) : null;
+    };
+
+    async function syncFromFirestore() {
+      const docRef = userDocRef();
+      if (!docRef) return;
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.startDate) localStorage.setItem(startDateKey, data.startDate);
+        if (Array.isArray(data.specialDates)) {
+          localStorage.setItem(localDatesKey, JSON.stringify(data.specialDates));
+        }
+      }
+      initLocalAndRender();
+    }
+
+    async function syncToFirestore() {
+      const docRef = userDocRef();
+      if (!docRef) return;
+      const payload = {
+        startDate: localStorage.getItem(startDateKey),
+        specialDates: JSON.parse(localStorage.getItem(localDatesKey) || "[]"),
+        updatedAt: serverTimestamp()
+      };
+      await setDoc(docRef, payload);
+    }
+
+    function initLocalAndRender() {
+      let sd = localStorage.getItem(startDateKey);
+      if (!sd) {
+        sd = new Date().toISOString();
+        localStorage.setItem(startDateKey, sd);
+        if (auth.currentUser) syncToFirestore();
+      }
+      updateCountdowns();
+      renderSpecialDates();
+      checkTodayNotification();
+    }
+
+    function updateCountdowns() {
+      const now = new Date();
+
+      const nextYear = new Date(now.getFullYear() + 1, 0, 1);
+      const daysNY = Math.floor((nextYear - now) / (1000 * 60 * 60 * 24));
+      document.getElementById('new-year-countdown').textContent = `${daysNY} day${daysNY !== 1 ? 's' : ''}`;
+
+      const daysUntilSat = (6 - now.getDay() + 7) % 7 || 7;
+      const nextSat = new Date(now);
+      nextSat.setDate(now.getDate() + daysUntilSat);
+      nextSat.setHours(0, 0, 0, 0);
+      const daysSat = Math.floor((nextSat - now) / (1000 * 60 * 60 * 24));
+      document.getElementById('weekend-countdown').textContent = `${daysSat} day${daysSat !== 1 ? 's' : ''}`;
+
+      const usageDays = Math.floor((now - new Date(localStorage.getItem(startDateKey))) / (1000 * 60 * 60 * 24));
+      document.getElementById('usage-days').textContent = `${usageDays} day${usageDays !== 1 ? 's' : ''}`;
+    }
+
+    function getCountdownText(originalDate) {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const eventDate = new Date(originalDate);
+      let next = new Date(currentYear, eventDate.getMonth(), eventDate.getDate());
+
+      if (next < now.setHours(0, 0, 0, 0)) {
+        next.setFullYear(currentYear + 1);
+      }
+
+      const diff = next - new Date();
+      const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+      return days === 0
+        ? "🎉 Today is your special day!"
+        : `${days} day${days !== 1 ? 's' : ''} left`;
+    }
+
+    function renderSpecialDates() {
+      const arr = JSON.parse(localStorage.getItem(localDatesKey) || "[]");
+      const ul = document.getElementById("special-dates-list");
+      ul.innerHTML = "";
+
+      arr.forEach((item, i) => {
+        const td = new Date(item.date);
+        const countdownText = getCountdownText(td);
+        ul.insertAdjacentHTML("beforeend", `
+          <li data-index="${i}" class="flex justify-between items-center bg-gray-50 px-4 py-3 rounded mb-2">
+            <div>
+              <p class="font-semibold">${item.title}</p>
+              <p class="text-sm text-gray-500">${td.toDateString()} — ${countdownText}</p>
+            </div>
+            <button class="text-red-500 hover:underline delete-btn" data-index="${i}">Delete</button>
+          </li>
+        `);
+      });
+
+      document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          const index = parseInt(e.currentTarget.dataset.index, 10);
+          const arr = JSON.parse(localStorage.getItem(localDatesKey) || "[]");
+          arr.splice(index, 1);
+          localStorage.setItem(localDatesKey, JSON.stringify(arr));
+          renderSpecialDates();
+          if (auth.currentUser) await syncToFirestore();
+        });
+      });
+
+      checkTodayNotification();
+    }
+
+    function checkTodayNotification() {
+      const today = new Date().toISOString().split("T")[0];
+      const arr = JSON.parse(localStorage.getItem(localDatesKey) || "[]");
+      const todayMatches = arr.filter(item => item.date === today);
+      const container = document.getElementById("today-notification");
+
+      if (todayMatches.length > 0) {
+        container.innerHTML = todayMatches.map(i => `🎉 Today is your <strong>${i.title}</strong>!`).join("<br>");
+        document.getElementById("alertSound")?.play?.();
+      } else {
+        const quotes = [
+          "No notifications, Every day is a new beginning 🌱",
+          "No notifications, Stay focused and keep growing 🚀",
+          "No notifications, do amazing things 🔥",
+          "No notifications, One step at a time, you got this 💪",
+          "No special day? Make today special! 🎯"
+        ];
+        container.textContent = quotes[Math.floor(Math.random() * quotes.length)];
+      }
+    }
+
+    document.getElementById("logout-btn")?.addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "/logout";
+    });
+
+    document.getElementById("openAddDateBtn")?.addEventListener("click", () => {
+      document.getElementById("addDateModal").classList.remove("hidden");
+    });
+
+    document.getElementById("closeAddDateBtn")?.addEventListener("click", () => {
+      document.getElementById("addDateModal").classList.add("hidden");
+    });
+
+    document.getElementById("saveDateBtn")?.addEventListener("click", async () => {
+      const title = document.getElementById("date-title").value.trim();
+      const date = document.getElementById("date-value").value;
+      if (!title || !date) return alert("Both fields required");
+
+      const arr = JSON.parse(localStorage.getItem(localDatesKey) || "[]");
+      arr.push({ title, date });
+      localStorage.setItem(localDatesKey, JSON.stringify(arr));
+      renderSpecialDates();
+      document.getElementById("addDateModal").classList.add("hidden");
+      if (auth.currentUser) await syncToFirestore();
+    });
+
+    function displayUserInfo(user) {
+      const container = document.getElementById("user-info");
+      if (container && user) {
+        container.innerHTML = `
+          <p><strong>Email:</strong> ${user.email}</p>
+          <p>UID: ${user.uid}</p>
+        `;
+      }
+    }
+
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        window.location.href = "/login";
+      } else {
+        displayUserInfo(user);
+        syncFromFirestore();
+        setInterval(updateCountdowns, 1000 * 60 * 60); // hourly
+      }
+    });
+  });
+</script>
+
+
+
+<script>
+    
+    function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobile-sidebar');
+
+    if (sidebar && overlay) {
+      // Toggle sidebar visibility
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    } else {
+      console.warn('Sidebar or overlay not found');
+    }
+  }
+</script>
+
+</body>
+</html>

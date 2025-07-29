@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/images/logo.png" />
+  <title>Focusly - Task Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb',
+          },
+        },
+      },
+    };
+  </script>
+</head>
+
+<body class="bg-gradient-to-br from-[#f3f5ff] via-[#e6ecff] to-[#e1f1ff] text-black transition-colors duration-300 min-h-screen">
+
+<!-- NAVIGATION -->
+<header class="w-full fixed top-0 left-0 z-50 px-6 py-4 bg-white shadow-md flex items-center justify-between">
+  <div class="flex items-center space-x-2">
+    <img src="/static/images/logo.png" class="h-8 w-8" alt="Logo" />
+    <span class="text-xl font-bold">Focusly</span>
+  </div>
+  <nav class="hidden md:flex items-center space-x-6">
+    <a href="#features" class="hover:text-primary transition">Features</a>
+    <a href="#download" class="hover:text-primary transition">Download Extension</a>
+    <a href="/login" class="hover:text-primary transition">Sign In</a>
+    <a href="/register" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700 transition">Sign Up</a>
+  </nav>
+  <div class="md:hidden flex items-center space-x-3">
+    <button id="menu-btn" class="text-2xl">☰</button>
+  </div>
+</header>
+
+<!-- Mobile Nav -->
+<div
+  id="mobile-menu"
+  class="md:hidden overflow-hidden max-h-0 transition-all duration-500 ease-in-out bg-white dark:bg-gray-800 mt-16"
+>
+  <a href="#features" class="block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-700">Features</a>
+  <a href="#download" class="block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-700">Download Extension</a>
+  <a
+    href="/register"
+    class="block px-6 py-3 text-blue-600 dark:text-blue-400 font-medium hover:bg-gray-100 dark:hover:bg-gray-700"
+    >Sign Up</a
+  >
+  <a href="/login" class="block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-700">Sign In</a>
+</div>
+
+<!-- HERO -->
+<main
+  class="pt-28 flex flex-col-reverse md:flex-row items-center justify-between max-w-7xl mx-auto px-6 py-16"
+>
+  <div class="w-full md:w-1/2 text-center md:text-left space-y-6">
+    <h1 class="text-4xl md:text-6xl font-bold leading-tight">
+      Organize your life,<br class="hidden md:block" /> one task at a time.
+    </h1>
+    <p class="text-gray-600 dark:text-gray-500 max-w-lg mx-auto md:mx-0">
+      Your personal task manager. Simple. Fast. Beautiful.
+    </p>
+    <div
+      class="flex flex-col md:flex-row items-center gap-4 mt-4 justify-center md:justify-start"
+    >
+      <a
+        href="/dashboard"
+        class="bg-primary text-white px-6 py-3 rounded shadow hover:scale-105 transition"
+        >Start Managing Tasks</a
+      >
+      <a
+        href="#download"
+        class="border border-primary text-primary px-6 py-3 rounded hover:bg-blue-50 dark:hover:bg-gray-700 transition"
+        >Download Extension</a
+      >
+    </div>
+  </div>
+  <div class="w-full md:w-1/2 mb-10 md:mb-0 flex justify-center">
+    <img
+      src="https://cdni.iconscout.com/illustration/premium/thumb/task-management-4484850-3723274.png"
+      class="w-96 max-w-full animate-fade-in"
+      alt="Hero Image"
+    />
+  </div>
+</main>
+
+<!-- ZOOM SCROLL SECTION -->
+<section class="relative py-24 overflow-hidden" id="scrollWrapper">
+  <div class="max-w-6xl mx-auto px-4 flex items-center justify-center relative">
+    <img
+      id="desktopImg"
+      src="/static/images/dashboard-desktop.png"
+      alt="Dashboard Desktop"
+      class="zoom-on-scroll w-full md:max-w-3xl rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-transform duration-700"
+    />
+    <img
+      id="mobileImg"
+      src="/static/images/dashboard-mobile.png"
+      alt="Dashboard Mobile"
+      class="mobile-fade absolute bottom-4 left-4 w-1/2 max-w-[140px] md:w-2/5 md:max-w-[180px] rounded-xl shadow-md border border-gray-300 dark:border-gray-600 transition-all duration-700 md:left-10"
+    />
+  </div>
+</section>
+
+<!-- FEATURES SECTION WITH VIDEO BACKGROUNDS -->
+<section class="py-24 px-6" id="features">
+  <!-- Feature 1: Text Left, Video Right -->
+  <div class="max-w-7xl mx-auto mb-20 relative rounded-3xl overflow-hidden shadow-xl feature-section">
+    <video
+      src="/static/feature/card1.mp4"
+      autoplay muted loop playsinline
+      class="w-full h-[400px] md:h-[500px] object-cover"
+    ></video>
+    <div
+      class="absolute top-0 left-0 bottom-0 w-full md:w-1/2 flex flex-col justify-center px-8 md:px-16 text-black"
+    >
+      <h4 class="text-primary font-semibold mb-2">Todo List</h4>
+      <h2 class="text-3xl md:text-5xl font-bold mb-4">
+        Organize everything in your life
+      </h2>
+      <p class="text-lg max-w-lg">
+        Whether it's work projects, personal tasks, or study plans, Focusly helps you organize and confidently tackle everything in your life.
+      </p>
+    </div>
+  </div>
+
+  <!-- Feature 2: Text Right, Video Left -->
+  <div class="max-w-7xl mx-auto mb-20 relative rounded-3xl overflow-hidden shadow-xl feature-section">
+    <video
+      src="/static/feature/card2.mp4"
+      autoplay muted loop playsinline
+      class="w-full h-[400px] md:h-[500px] object-cover"
+    ></video>
+    <div
+      class="absolute top-0 right-0 bottom-0 w-full md:w-1/2 flex flex-col justify-center px-8 md:px-16 text-black text-right"
+    >
+      <h4 class="text-primary font-semibold mb-2">Calendar Views</h4>
+      <h2 class="text-3xl md:text-5xl font-bold mb-4">
+        Easily plan your schedule
+      </h2>
+      <p class="text-lg max-w-lg ml-auto">
+        Adopt the popular "Pomodoro Technique"—break tasks into 25-minute intervals to stay focused and achieve a productive flow.
+      </p>
+    </div>
+  </div>
+
+  <!-- Feature 3: Text Left, Video Right -->
+  <div class="max-w-7xl mx-auto mb-20 relative rounded-3xl overflow-hidden shadow-xl feature-section">
+    <video
+      src="/static/feature/card3.mp4"
+      autoplay muted loop playsinline
+      class="w-full h-[400px] md:h-[500px] object-cover"
+    ></video>
+    <div
+      class="absolute top-0 left-0 bottom-0 w-full md:w-1/2 flex flex-col justify-center px-8 md:px-16 text-black"
+    >
+      <h4 class="text-primary font-semibold mb-2">Pomodoro</h4>
+      <h2 class="text-3xl md:text-5xl font-bold mb-4">
+        Track time and stay focused
+      </h2>
+      <p class="text-lg max-w-lg">
+        Adopt the popular "Pomodoro Technique"—break tasks into 25-minute intervals to stay focused and achieve a productive flow.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="text-gray-600 dark:text-gray-400 py-12 mt-10 px-6">
+  <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-10">
+    <div>
+      <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Focusly</h4>
+      <p>Your smart task manager to boost productivity and peace of mind.</p>
+    </div>
+    <div>
+      <h5 class="font-semibold mb-2">Product</h5>
+      <ul class="space-y-2">
+        <li><a href="#" class="hover:text-primary">Features</a></li>
+        <li><a href="#" class="hover:text-primary">Pricing</a></li>
+        <li><a href="#" class="hover:text-primary">Extension</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5 class="font-semibold mb-2">Company</h5>
+      <ul class="space-y-2">
+        <li><a href="#" class="hover:text-primary">About Us</a></li>
+        <li><a href="#" class="hover:text-primary">Careers</a></li>
+        <li><a href="#" class="hover:text-primary">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5 class="font-semibold mb-2">Legal</h5>
+      <ul class="space-y-2">
+        <li><a href="#" class="hover:text-primary">Terms of Use</a></li>
+        <li><a href="#" class="hover:text-primary">Privacy Policy</a></li>
+        <li><a href="#" class="hover:text-primary">Cookies</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="mt-10 text-center text-sm">© 2025 Focusly. All rights reserved.</div>
+</footer>
+
+<!-- SCRIPTS -->
+<script>
+
+  const menuBtn = document.getElementById('menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  let menuOpen = false;
+
+  menuBtn.addEventListener('click', () => {
+    menuOpen = !menuOpen;
+    mobileMenu.classList.toggle('max-h-0', !menuOpen);
+    mobileMenu.classList.toggle('max-h-96', menuOpen);
+  });
+
+  const desktopImg = document.getElementById('desktopImg');
+  const mobileImg = document.getElementById('mobileImg');
+  const scrollWrapper = document.getElementById('scrollWrapper');
+
+  const handleScrollEffect = () => {
+    const wrapperRect = scrollWrapper.getBoundingClientRect();
+    const triggerStart = window.innerHeight * 0.55;
+    const triggerEnd = window.innerHeight * 0.55;
+
+    if (wrapperRect.top < triggerStart && wrapperRect.bottom > triggerEnd) {
+      desktopImg.classList.add('zoomed');
+      mobileImg.classList.add('mobile-hidden');
+    } else {
+      desktopImg.classList.remove('zoomed');
+      mobileImg.classList.remove('mobile-hidden');
+    }
+  };
+
+  window.addEventListener('scroll', handleScrollEffect);
+  window.addEventListener('load', handleScrollEffect);
+
+  // Feature sections fade-slide-in animation using Intersection Observer
+  const features = document.querySelectorAll('.feature-section');
+
+  const observerOptions = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.15,
+  };
+
+  const featureObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('fade-slide-in');
+        observer.unobserve(entry.target); // animate only once
+      }
+    });
+  }, observerOptions);
+
+  features.forEach((feature) => {
+    featureObserver.observe(feature);
+  });
+</script>
+
+<!-- STYLES -->
+<style>
+
+ body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at top left, #edf1ff, #e7f0ff, #eaf5ff);
+  z-index: -1;
+  opacity: 1;
+}
+
+  .animate-fade-in {
+    animation: fadeIn 1s ease-in-out both;
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .zoom-on-scroll {
+    transition: transform 0.8s ease;
+  }
+  .zoomed {
+    transform: scale(1.08);
+  }
+  .mobile-fade {
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .mobile-hidden {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  /* FEATURE SECTION ANIMATION */
+  .feature-section {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 1.5s ease, transform 1.5s ease;
+  }
+  .feature-section.fade-slide-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ADD TEXT SHADOW TO FEATURE TEXT TO IMPROVE VISIBILITY OVER VIDEO */
+  .feature-section > div > * {
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+  }
+</style>
+
+</body>
+</html>
