@@ -4,6 +4,7 @@
 > Built with **Flask**, **Firebase**, **Google OAuth**, and **TailwindCSS**.
 
 ![Dashboard Screenshot](backend/static/images/og.png)
+![ER Diagram](database-er-diagram.png)
 
 ---
 
