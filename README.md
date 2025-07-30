@@ -4,7 +4,6 @@
 > Built with **Flask**, **Firebase**, **Google OAuth**, and **TailwindCSS**.
 
 ![Dashboard Screenshot](backend/static/images/og.png)
-![ER Diagram](database-er-diagram.png)
 
 ---
 
@@ -37,6 +36,7 @@
 - **Frontend:** [TailwindCSS](https://tailwindcss.com/) + Jinja Templates
 - **Authentication:** [Google OAuth 2.0](https://developers.google.com/identity/protocols/oauth2) + [Firebase Auth](https://firebase.google.com/docs/auth)
 - **Database:** [Firebase Firestore](https://firebase.google.com/docs/firestore)
+![ER Diagram](database-er-diagram.png)
 - **Deployment:** Compatible with Heroku / Render / AWS / GCP
 - **Environment Management:** Python-dotenv
 
