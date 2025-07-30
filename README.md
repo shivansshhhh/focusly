@@ -42,7 +42,7 @@
 - ![ER Diagram](database-er-diagram.png)
 - **Data Dictionary**
 
-- **Collection: users **
+Collection: users
 
 | Field        | Type     | Description                       |
 |--------------|----------|-----------------------------------|
@@ -53,7 +53,7 @@
 
 ---
 
-- **Subcollection: tasks**
+Subcollection: tasks
 
 | Field         | Type     | Description                                 |
 |---------------|----------|---------------------------------------------|
@@ -66,12 +66,7 @@
 | created_on    | datetime | Creation timestamp                          |
 | updated_on    | datetime | Last updated timestamp                      |
 
-- **Approach:** Code-First (Firestore documents are defined via Python logic and js, not SQL).
-- **Firestore Indexes**
-
-Firestore auto-creates indexes for all single fields.
-
-- **Composite Indexes**
+Composite Indexes
 If filtering by multiple fields (e.g., `status + due_date`), you may need to manually create a composite index via Firestore Console:
 
 | Fields            | Order     |
@@ -80,6 +75,8 @@ If filtering by multiple fields (e.g., `status + due_date`), you may need to man
 | due_date          | Descending |
 | status            | Ascending |
 
+- **Approach:** Code-First (Firestore documents are defined via Python logic and js, not SQL).
+- **Firestore Indexes** Firestore auto-creates indexes for all single fields.
 ---
 ##Live link- https://betsito.com/
 ## 🚀 Getting Started
