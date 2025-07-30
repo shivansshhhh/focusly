@@ -166,6 +166,25 @@ The app is deployed on a privately owned domain using a Germany-based VPS for fu
 This setup ensures better control over infrastructure, performance, and security.
 ---
 
+
+## User Acceptance Testing (UAT)
+
+The app was manually tested to ensure readiness for production:
+
+✅ Register/Login using Email/Password  
+✅ Login with Phone OTP (Firebase)  
+✅ Add/Edit/Delete/Update Tasks  
+✅ Pomodoro Timer Functionality  
+✅ Cross-browser checks (Chrome, Firefox, Edge)  
+✅ Responsive Design on Mobile and Desktop  
+✅ Firebase rules verified for security
+
+No critical bugs found at the time of testing.
+If your sign up not working (google auth disconnection or other issues I'll fix this soon.)
+try-
+use id- top@gmail.com
+pass- 1234567890 (only for testing and review the web app in condition sign up not working.)
+
 👨‍💻 Author
 
 Shivansh Panwar
