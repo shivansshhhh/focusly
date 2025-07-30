@@ -151,24 +151,7 @@ focusly/
 
 ## 🌐 Deployment Architecture
 
-
-+--------------+
-|   Browser    |
-+------+-------+
-       |
-       v
-+--------------+        +-----------------------+
-|  Flask App   | <----> |   Firebase Services   |
-| (betsito.com)|        | (Auth + Firestore DB) |
-+------+-------+        +-----------------------+
-       |
-       v
-+--------------+
-|    VPS       |  (Hosted in Germany)
-|  (Ubuntu +   |
-|  Gunicorn +  |
-|  NGINX)      |
-+--------------+
+![Deployment Architecture](deployment_architecture.png)
 
 ### Domain & Hosting Details
 
