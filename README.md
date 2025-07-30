@@ -40,21 +40,48 @@
 - **Database:** [Firebase Firestore](https://firebase.google.com/docs/firestore)
 - **Data Dictionary**
 
-| Field         | Type      | Description                            |
-|---------------|-----------|----------------------------------------|
-| `id`          | string    | Task unique ID                         |
-| `title`       | string    | Task title                             |
-| `description` | string    | Task description                       |
-| `due_date`    | timestamp | When the task is due                   |
-| `status`      | string    | Current task status (e.g., Pending)    |
-| `remarks`     | string    | Any additional notes                   |
-| `created_on`  | timestamp | Creation timestamp                     |
-| `updated_on`  | timestamp | Last update timestamp                  |
-| `created_by`  | string    | User ID who created it                 |
-| `updated_by`  | string    | User ID who last updated it            |
+** 🔹 Collection: users **
 
-- **Indexes Used:** Firebase uses automatic indexing. Composite indexes can be added for `created_by + due_date` queries if needed.
+| Field        | Type     | Description                       |
+|--------------|----------|-----------------------------------|
+| uid          | string   | Firebase UID (Primary Key)        |
+| email        | string   | User's email                      |
+| phone        | string   | User's phone number               |
+| created_at   | datetime | Account creation timestamp        |
+
+---
+
+** 🔹 Subcollection: tasks (under each user) **
+
+| Field         | Type     | Description                                 |
+|---------------|----------|---------------------------------------------|
+| task_id       | string   | Task Document ID                            |
+| title         | string   | Title of the task                           |
+| description   | string   | Detailed description                        |
+| due_date      | datetime | Task deadline                               |
+| status        | string   | Task status (e.g., pending, completed)      |
+| remarks       | string   | Optional notes                              |
+| created_on    | datetime | Creation timestamp                          |
+| updated_on    | datetime | Last updated timestamp                      |
+
 - **Approach:** Code-First (Firestore documents are defined via Python logic and js, not SQL).
+- ** Firestore Indexes**
+
+Firestore auto-creates indexes for all single fields.
+
+** Composite Indexes **
+If filtering by multiple fields (e.g., `status + due_date`), you may need to manually create a composite index via Firestore Console:
+
+| Fields            | Order     |
+|-------------------|-----------|
+| user_uid          | Ascending |
+| due_date          | Descending |
+| status            | Ascending |
+
+If no custom indexes were created manually, just mention:
+
+> No custom Firestore indexes were needed for this app.
+
 - **Database-Er-diagram:**
 - ![ER Diagram](database-er-diagram.png)
 
