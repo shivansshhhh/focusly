@@ -148,7 +148,8 @@ focusly/
 └── README.md
 ```
 
-###🌐 Deployment Architecture
+### 🌐 Deployment Architecture
+
 
 +--------------+
 |   Browser    |
