@@ -180,11 +180,15 @@ The app was manually tested to ensure readiness for production:
 ✅ Firebase rules verified for security
 
 No critical bugs found at the time of testing.
-If your sign up not working (google auth disconnection or other issues I'll fix this soon.)
-try-
-use id- top@gmail.com
-pass- 1234567890 (only for testing and review the web app in condition sign up not working.)
 
+If your sign up not working (google auth disconnection or other issues I'll fix this soon.)
+
+try-
+
+use id- top@gmail.com
+
+pass- 1234567890 (only for testing and review the web app in condition sign up not working.)
+---
 👨‍💻 Author
 
 Shivansh Panwar
