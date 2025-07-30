@@ -167,7 +167,7 @@ This setup ensures better control over infrastructure, performance, and security
 ---
 
 
-## User Acceptance Testing (UAT)
+## ⚙️ User Acceptance Testing (UAT)
 
 The app was manually tested to ensure readiness for production:
 
