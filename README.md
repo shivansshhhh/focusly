@@ -39,6 +39,7 @@
 - **Environment Management:** Python-dotenv
 - **Database:** [Firebase Firestore](https://firebase.google.com/docs/firestore)
 - **Data Dictionary**
+
 | Field         | Type      | Description                            |
 |---------------|-----------|----------------------------------------|
 | `id`          | string    | Task unique ID                         |
