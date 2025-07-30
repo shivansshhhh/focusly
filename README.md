@@ -51,7 +51,6 @@ Collection: users
 | phone        | string   | User's phone number               |
 | created_at   | datetime | Account creation timestamp        |
 
----
 
 Subcollection: tasks
 
@@ -74,6 +73,8 @@ If filtering by multiple fields (e.g., `status + due_date`), you may need to man
 | user_uid          | Ascending |
 | due_date          | Descending |
 | status            | Ascending |
+
+---
 
 - **Approach:** Code-First (Firestore documents are defined via Python logic and js, not SQL).
 - **Firestore Indexes** Firestore auto-creates indexes for all single fields.
