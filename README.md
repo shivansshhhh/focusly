@@ -2,7 +2,6 @@
 
 > A modern task management web app to help you organize life, boost productivity, and stay focused.  
 > Built with **Flask**, **Firebase**, **Google OAuth**, and **TailwindCSS**.
-> KISS - keep it simple, stupid.
 
 ![Dashboard Screenshot](backend/static/images/og.png)
 
