@@ -41,7 +41,6 @@
 - **Database-Er-diagram:**
 - ![ER Diagram](database-er-diagram.png)
 - **Data Dictionary**👇
----
 Collection: users
 
 | Field        | Type     | Description                       |
@@ -64,15 +63,6 @@ Subcollection: tasks
 | remarks       | string   | Optional notes                              |
 | created_on    | datetime | Creation timestamp                          |
 | updated_on    | datetime | Last updated timestamp                      |
-
-Composite Indexes
-If filtering by multiple fields (e.g., `status + due_date`), you may need to manually create a composite index via Firestore Console:
-
-| Fields            | Order     |
-|-------------------|-----------|
-| user_uid          | Ascending |
-| due_date          | Descending |
-| status            | Ascending |
 
 ---
 
