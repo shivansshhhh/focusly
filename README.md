@@ -38,9 +38,11 @@
 - **Deployment:** Compatible with Heroku / Render / AWS / GCP
 - **Environment Management:** Python-dotenv
 - **Database:** [Firebase Firestore](https://firebase.google.com/docs/firestore)
+- **Database-Er-diagram:**
+- ![ER Diagram](database-er-diagram.png)
 - **Data Dictionary**
 
-** 🔹 Collection: users **
+- **Collection: users **
 
 | Field        | Type     | Description                       |
 |--------------|----------|-----------------------------------|
@@ -51,7 +53,7 @@
 
 ---
 
-** 🔹 Subcollection: tasks (under each user) **
+- **Subcollection: tasks**
 
 | Field         | Type     | Description                                 |
 |---------------|----------|---------------------------------------------|
@@ -65,11 +67,11 @@
 | updated_on    | datetime | Last updated timestamp                      |
 
 - **Approach:** Code-First (Firestore documents are defined via Python logic and js, not SQL).
-- ** Firestore Indexes**
+- **Firestore Indexes**
 
 Firestore auto-creates indexes for all single fields.
 
-** Composite Indexes **
+- **Composite Indexes**
 If filtering by multiple fields (e.g., `status + due_date`), you may need to manually create a composite index via Firestore Console:
 
 | Fields            | Order     |
@@ -77,13 +79,6 @@ If filtering by multiple fields (e.g., `status + due_date`), you may need to man
 | user_uid          | Ascending |
 | due_date          | Descending |
 | status            | Ascending |
-
-If no custom indexes were created manually, just mention:
-
-> No custom Firestore indexes were needed for this app.
-
-- **Database-Er-diagram:**
-- ![ER Diagram](database-er-diagram.png)
 
 ---
 ##Live link- https://betsito.com/
