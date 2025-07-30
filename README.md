@@ -3,7 +3,7 @@
 > A modern task management web app to help you organize life, boost productivity, and stay focused.  
 > Built with **Flask**, **Firebase**, **Google OAuth**, and **TailwindCSS**.
 
-![Dashboard Screenshot](./static/images/dashboard-desktop.png)
+![Dashboard Screenshot](backend/static/images/dashboard-desktop.png)
 
 ---
 
