@@ -38,7 +38,8 @@
 - **Deployment:** Compatible with Heroku / Render / AWS / GCP
 - **Environment Management:** Python-dotenv
 - **Database:** [Firebase Firestore](https://firebase.google.com/docs/firestore)
-- **Database-Er-diagram:**![ER Diagram](database-er-diagram.png)
+- **Database-Er-diagram:**
+- ![ER Diagram](database-er-diagram.png)
 
 ---
 ##Live link- https://betsito.com/
