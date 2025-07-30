@@ -185,8 +185,8 @@ If your sign up not working (google auth disconnection or other issues I'll fix 
 
 try-
 
-use id- top@gmail.com
-pass- 1234567890 (only for testing and review the web app in condition sign up not working.)
+use id- top@gmail.com, 
+password- 1234567890 (only for testing and review the web app in condition sign up not working.)
 
 ---
 👨‍💻 Author
