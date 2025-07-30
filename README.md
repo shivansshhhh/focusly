@@ -147,8 +147,9 @@ focusly/
 ├── .env
 └── README.md
 ```
+---
 
-### 🌐 Deployment Architecture
+## 🌐 Deployment Architecture
 
 
 +--------------+
