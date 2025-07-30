@@ -40,8 +40,8 @@
 - **Database:** [Firebase Firestore](https://firebase.google.com/docs/firestore)
 - **Database-Er-diagram:**
 - ![ER Diagram](database-er-diagram.png)
-- **Data Dictionary**
-
+- **Data Dictionary**👇
+---
 Collection: users
 
 | Field        | Type     | Description                       |
