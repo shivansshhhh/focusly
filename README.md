@@ -38,6 +38,23 @@
 - **Deployment:** Compatible with Heroku / Render / AWS / GCP
 - **Environment Management:** Python-dotenv
 - **Database:** [Firebase Firestore](https://firebase.google.com/docs/firestore)
+- ### Data Dictionary
+
+| Field         | Type      | Description                            |
+|---------------|-----------|----------------------------------------|
+| `id`          | string    | Task unique ID                         |
+| `title`       | string    | Task title                             |
+| `description` | string    | Task description                       |
+| `due_date`    | timestamp | When the task is due                   |
+| `status`      | string    | Current task status (e.g., Pending)    |
+| `remarks`     | string    | Any additional notes                   |
+| `created_on`  | timestamp | Creation timestamp                     |
+| `updated_on`  | timestamp | Last update timestamp                  |
+| `created_by`  | string    | User ID who created it                 |
+| `updated_by`  | string    | User ID who last updated it            |
+
+- **Indexes Used:** Firebase uses automatic indexing. Composite indexes can be added for `created_by + due_date` queries if needed.
+- **Approach:** Code-First (Firestore documents are defined via Python logic and js, not SQL).
 - **Database-Er-diagram:**
 - ![ER Diagram](database-er-diagram.png)
 
