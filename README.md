@@ -41,28 +41,29 @@
 - **Database-Er-diagram:**
 - ![ER Diagram](database-er-diagram.png)
 - **Data Dictionary**👇
-Collection: users
 
-| Field        | Type     | Description                       |
-|--------------|----------|-----------------------------------|
-| uid          | string   | Firebase UID (Primary Key)        |
-| email        | string   | User's email                      |
-| phone        | string   | User's phone number               |
-| created_at   | datetime | Account creation timestamp        |
+  Collection: users
+
+    | Field        | Type     | Description                       |
+    |--------------|----------|-----------------------------------|
+    | uid          | string   | Firebase UID (Primary Key)        |
+    | email        | string   | User's email                      |
+    | phone        | string   | User's phone number               |
+    | created_at   | datetime | Account creation timestamp        |
 
 
-Subcollection: tasks
+  Subcollection: tasks
 
-| Field         | Type     | Description                                 |
-|---------------|----------|---------------------------------------------|
-| task_id       | string   | Task Document ID                            |
-| title         | string   | Title of the task                           |
-| description   | string   | Detailed description                        |
-| due_date      | datetime | Task deadline                               |
-| status        | string   | Task status (e.g., pending, completed)      |
-| remarks       | string   | Optional notes                              |
-| created_on    | datetime | Creation timestamp                          |
-| updated_on    | datetime | Last updated timestamp                      |
+    | Field         | Type     | Description                                 |
+    |---------------|----------|---------------------------------------------|
+    | task_id       | string   | Task Document ID                            |
+    | title         | string   | Title of the task                           |
+    | description   | string   | Detailed description                        |
+    | due_date      | datetime | Task deadline                               |
+    | status        | string   | Task status (e.g., pending, completed)      |
+    | remarks       | string   | Optional notes                              |
+    | created_on    | datetime | Creation timestamp                          |
+    | updated_on    | datetime | Last updated timestamp                      |
 
 ---
 
