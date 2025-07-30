@@ -148,6 +148,39 @@ focusly/
 └── README.md
 ```
 
+###🌐 Deployment Architecture
+
++--------------+
+|   Browser    |
++------+-------+
+       |
+       v
++--------------+        +-----------------------+
+|  Flask App   | <----> |   Firebase Services   |
+| (betsito.com)|        | (Auth + Firestore DB) |
++------+-------+        +-----------------------+
+       |
+       v
++--------------+
+|    VPS       |  (Hosted in Germany)
+|  (Ubuntu +   |
+|  Gunicorn +  |
+|  NGINX)      |
++--------------+
+
+### Domain & Hosting Details
+
+The app is deployed on a privately owned domain using a Germany-based VPS for full control over deployment and performance.
+
+- **Domain**: [https://betsito.com](https://betsito.com)
+- **Registrar**: Njalla
+- **Server Location**: Germany
+- **SSL**: Enabled via Let's Encrypt
+- **Firewall**: UFW with allowed ports for HTTP/HTTPS
+
+This setup ensures better control over infrastructure, performance, and security.
+---
+
 👨‍💻 Author
 
 Shivansh Panwar
