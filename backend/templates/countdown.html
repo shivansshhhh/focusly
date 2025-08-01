@@ -165,14 +165,6 @@ nav button.active svg {
   <!-- Summary Cards -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     <div class="bg-white p-4 rounded-lg shadow text-center">
-      <p class="text-sm text-gray-500">New Year Countdown</p>
-      <h2 id="new-year-countdown" class="text-2xl font-bold text-primary">Loading...</h2>
-    </div>
-    <div class="bg-white p-4 rounded-lg shadow text-center">
-      <p class="text-sm text-gray-500">Weekend Countdown</p>
-      <h2 id="weekend-countdown" class="text-2xl font-bold text-primary">Loading...</h2>
-    </div>
-    <div class="bg-white p-4 rounded-lg shadow text-center">
       <p class="text-sm text-gray-500">Days Using Focusly</p>
       <h2 id="usage-days" class="text-2xl font-bold text-primary">0 days</h2>
     </div>
@@ -203,238 +195,289 @@ nav button.active svg {
   </div>
 </div>
 
-
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import {
-    getAuth,
-    onAuthStateChanged,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const firebaseConfig = {
-      apiKey: "AIzaSyDZvQXmgnPD81cCdjVrgDn-QlaY_f5m2xE",
-      authDomain: "focusly-97e22.firebaseapp.com",
-      projectId: "focusly-97e22",
-      storageBucket: "focusly-97e22.appspot.com",
-      messagingSenderId: "109369885144",
-      appId: "1:109369885144:web:1f5c3627c4c5f6d4b372ad",
-      measurementId: "G-8GCFDG9EKL"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const startDateKey = "focuslyStart";
-    const localDatesKey = "specialDates";
-
-    const userDocRef = () => {
-      const user = auth.currentUser;
-      return user ? doc(db, "countdowns", user.uid) : null;
-    };
-
-    async function syncFromFirestore() {
-      const docRef = userDocRef();
-      if (!docRef) return;
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.startDate) localStorage.setItem(startDateKey, data.startDate);
-        if (Array.isArray(data.specialDates)) {
-          localStorage.setItem(localDatesKey, JSON.stringify(data.specialDates));
-        }
-      }
-      initLocalAndRender();
-    }
-
-    async function syncToFirestore() {
-      const docRef = userDocRef();
-      if (!docRef) return;
-      const payload = {
-        startDate: localStorage.getItem(startDateKey),
-        specialDates: JSON.parse(localStorage.getItem(localDatesKey) || "[]"),
-        updatedAt: serverTimestamp()
-      };
-      await setDoc(docRef, payload);
-    }
-
-    function initLocalAndRender() {
-      let sd = localStorage.getItem(startDateKey);
-      if (!sd) {
-        sd = new Date().toISOString();
-        localStorage.setItem(startDateKey, sd);
-        if (auth.currentUser) syncToFirestore();
-      }
-      updateCountdowns();
-      renderSpecialDates();
-      checkTodayNotification();
-    }
-
-    function updateCountdowns() {
-      const now = new Date();
-
-      const nextYear = new Date(now.getFullYear() + 1, 0, 1);
-      const daysNY = Math.floor((nextYear - now) / (1000 * 60 * 60 * 24));
-      document.getElementById('new-year-countdown').textContent = `${daysNY} day${daysNY !== 1 ? 's' : ''}`;
-
-      const daysUntilSat = (6 - now.getDay() + 7) % 7 || 7;
-      const nextSat = new Date(now);
-      nextSat.setDate(now.getDate() + daysUntilSat);
-      nextSat.setHours(0, 0, 0, 0);
-      const daysSat = Math.floor((nextSat - now) / (1000 * 60 * 60 * 24));
-      document.getElementById('weekend-countdown').textContent = `${daysSat} day${daysSat !== 1 ? 's' : ''}`;
-
-      const usageDays = Math.floor((now - new Date(localStorage.getItem(startDateKey))) / (1000 * 60 * 60 * 24));
-      document.getElementById('usage-days').textContent = `${usageDays} day${usageDays !== 1 ? 's' : ''}`;
-    }
-
-    function getCountdownText(originalDate) {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const eventDate = new Date(originalDate);
-      let next = new Date(currentYear, eventDate.getMonth(), eventDate.getDate());
-
-      if (next < now.setHours(0, 0, 0, 0)) {
-        next.setFullYear(currentYear + 1);
-      }
-
-      const diff = next - new Date();
-      const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-
-      return days === 0
-        ? "🎉 Today is your special day!"
-        : `${days} day${days !== 1 ? 's' : ''} left`;
-    }
-
-    function renderSpecialDates() {
-      const arr = JSON.parse(localStorage.getItem(localDatesKey) || "[]");
-      const ul = document.getElementById("special-dates-list");
-      ul.innerHTML = "";
-
-      arr.forEach((item, i) => {
-        const td = new Date(item.date);
-        const countdownText = getCountdownText(td);
-        ul.insertAdjacentHTML("beforeend", `
-          <li data-index="${i}" class="flex justify-between items-center bg-gray-50 px-4 py-3 rounded mb-2">
-            <div>
-              <p class="font-semibold">${item.title}</p>
-              <p class="text-sm text-gray-500">${td.toDateString()} — ${countdownText}</p>
-            </div>
-            <button class="text-red-500 hover:underline delete-btn" data-index="${i}">Delete</button>
-          </li>
-        `);
-      });
-
-      document.querySelectorAll(".delete-btn").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-          const index = parseInt(e.currentTarget.dataset.index, 10);
-          const arr = JSON.parse(localStorage.getItem(localDatesKey) || "[]");
-          arr.splice(index, 1);
-          localStorage.setItem(localDatesKey, JSON.stringify(arr));
-          renderSpecialDates();
-          if (auth.currentUser) await syncToFirestore();
-        });
-      });
-
-      checkTodayNotification();
-    }
-
-    function checkTodayNotification() {
-      const today = new Date().toISOString().split("T")[0];
-      const arr = JSON.parse(localStorage.getItem(localDatesKey) || "[]");
-      const todayMatches = arr.filter(item => item.date === today);
-      const container = document.getElementById("today-notification");
-
-      if (todayMatches.length > 0) {
-        container.innerHTML = todayMatches.map(i => `🎉 Today is your <strong>${i.title}</strong>!`).join("<br>");
-        document.getElementById("alertSound")?.play?.();
-      } else {
-        const quotes = [
-          "No notifications, Every day is a new beginning 🌱",
-          "No notifications, Stay focused and keep growing 🚀",
-          "No notifications, do amazing things 🔥",
-          "No notifications, One step at a time, you got this 💪",
-          "No special day? Make today special! 🎯"
-        ];
-        container.textContent = quotes[Math.floor(Math.random() * quotes.length)];
-      }
-    }
-
-    document.getElementById("logout-btn")?.addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "/logout";
-    });
-
-    document.getElementById("openAddDateBtn")?.addEventListener("click", () => {
-      document.getElementById("addDateModal").classList.remove("hidden");
-    });
-
-    document.getElementById("closeAddDateBtn")?.addEventListener("click", () => {
-      document.getElementById("addDateModal").classList.add("hidden");
-    });
-
-    document.getElementById("saveDateBtn")?.addEventListener("click", async () => {
-      const title = document.getElementById("date-title").value.trim();
-      const date = document.getElementById("date-value").value;
-      if (!title || !date) return alert("Both fields required");
-
-      const arr = JSON.parse(localStorage.getItem(localDatesKey) || "[]");
-      arr.push({ title, date });
-      localStorage.setItem(localDatesKey, JSON.stringify(arr));
-      renderSpecialDates();
-      document.getElementById("addDateModal").classList.add("hidden");
-      if (auth.currentUser) await syncToFirestore();
-    });
-
-    function displayUserInfo(user) {
-      const container = document.getElementById("user-info");
-      if (container && user) {
-        container.innerHTML = `
-          <p><strong>Email:</strong> ${user.email}</p>
-          <p>UID: ${user.uid}</p>
-        `;
-      }
-    }
-
-    onAuthStateChanged(auth, user => {
-      if (!user) {
-        window.location.href = "/login";
-      } else {
-        displayUserInfo(user);
-        syncFromFirestore();
-        setInterval(updateCountdowns, 1000 * 60 * 60); // hourly
-      }
-    });
-  });
-</script>
-
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 
 <script>
-    
-    function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('mobile-sidebar');
+  const firebaseConfig = {
+    apiKey: "AIzaSyDp1PwJHxMfNjNrlOGV-XbiSju1TDQDfo0",
+    authDomain: "focusly-a01fb.firebaseapp.com",
+    projectId: "focusly-a01fb",
+    storageBucket: "focusly-a01fb.appspot.com",
+    messagingSenderId: "225376542906",
+    appId: "1:225376542906:web:2df140f814e2594d072283",
+    measurementId: "G-FY70D2J35M"
+  };
 
-    if (sidebar && overlay) {
-      // Toggle sidebar visibility
-      sidebar.classList.toggle('-translate-x-full');
-      overlay.classList.toggle('hidden');
-    } else {
-      console.warn('Sidebar or overlay not found');
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const userInfo = document.getElementById('user-info');
+  const specialDatesList = document.getElementById('special-dates-list');
+  const notificationsDiv = document.getElementById('today-notification');
+  const usageDaysElem = document.getElementById('usage-days');
+
+  const addDateModal = document.getElementById('addDateModal');
+  const openAddDateBtn = document.getElementById('openAddDateBtn');
+  const cancelAddDateBtn = document.getElementById('cancelAddDateBtn');
+  const saveAddDateBtn = document.getElementById('saveAddDateBtn');
+  const dateTitleInput = document.getElementById('date-title');
+  const dateValueInput = document.getElementById('date-value');
+
+  let currentUser = null;
+  let specialDates = [];
+
+  function startOfDay(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  function daysBetween(d1, d2) {
+    return Math.floor((startOfDay(d2) - startOfDay(d1)) / (1000 * 60 * 60 * 24));
+  }
+
+  function getNextOccurrence(date) {
+    const now = new Date();
+    const candidate = new Date(date);
+    candidate.setFullYear(now.getFullYear());
+    if (startOfDay(candidate) < startOfDay(now)) {
+      candidate.setFullYear(now.getFullYear() + 1);
+    }
+    return candidate;
+  }
+
+  function getNextWeekend() {
+    const now = startOfDay(new Date());
+    const dayOfWeek = now.getDay();
+    let daysToSaturday = (6 - dayOfWeek);
+    const nextSat = new Date(now);
+    nextSat.setDate(now.getDate() + daysToSaturday);
+    return nextSat;
+  }
+
+  function formatDaysLeft(targetDate, recurring = false) {
+    let target = recurring ? getNextOccurrence(targetDate) : targetDate;
+    const diff = daysBetween(new Date(), target);
+    if (diff < 0) return 'Date passed';
+    if (diff === 0) return 'Today';
+    return `${diff} day${diff !== 1 ? 's' : ''}`;
+  }
+
+  function getDefaultCountdowns() {
+  const now = new Date();
+  const newYear = new Date(now.getFullYear() + 1, 0, 1); // Jan 1 of next year
+  const weekend = getNextWeekend();
+
+  return [
+    { id: 'default_new_year', title: 'New Year', date: newYear, recurring: true },
+    { id: 'default_weekend', title: 'Weekend (Saturday)', date: weekend, recurring: true }
+  ];
+}
+
+
+
+  function renderSpecialDates(allDates) {
+    specialDatesList.innerHTML = '';
+
+    const upcoming = allDates.filter(d => {
+      const dDate = d.date instanceof Date ? d.date : new Date(d.date);
+      const nextDate = d.recurring ? getNextOccurrence(dDate) : dDate;
+      return daysBetween(startOfDay(new Date()), startOfDay(nextDate)) >= 0;
+    });
+
+    if (upcoming.length === 0) {
+      specialDatesList.innerHTML = '<li class="text-gray-500">No upcoming special dates.</li>';
+      return;
+    }
+
+    upcoming.sort((a, b) => {
+      const aDate = a.date instanceof Date ? a.date : new Date(a.date);
+      const bDate = b.date instanceof Date ? b.date : new Date(b.date);
+      const aNext = a.recurring ? getNextOccurrence(aDate) : aDate;
+      const bNext = b.recurring ? getNextOccurrence(bDate) : bDate;
+      return aNext - bNext;
+    });
+
+    const today = startOfDay(new Date());
+
+    upcoming.forEach(d => {
+      const dDate = d.date instanceof Date ? d.date : new Date(d.date);
+      const nextDate = d.recurring ? getNextOccurrence(dDate) : dDate;
+      const daysLeft = daysBetween(today, startOfDay(nextDate));
+
+      const li = document.createElement('li');
+      li.className = "p-3 border rounded flex justify-between items-center mb-2";
+
+      if (daysLeft === 0) {
+        li.classList.add('bg-green-200', 'font-bold');
+      } else if (daysLeft > 0 && daysLeft <= 3) {
+        li.classList.add('bg-yellow-100');
+      } else {
+        li.classList.add('bg-gray-50');
+      }
+
+      li.innerHTML = `
+        <div>
+          <p class="font-semibold">${d.title}</p>
+          <p class="text-sm text-gray-600">
+  Entered: ${dDate.toDateString()}<br>
+  Next: ${nextDate.toDateString()} — 
+  <span class="text-primary font-bold">${formatDaysLeft(dDate, d.recurring)}</span>
+</p>
+
+        </div>
+        ${d.id && !d.id.startsWith('default_') ? 
+          `<button class="text-red-600 hover:text-red-800" aria-label="Delete date" data-id="${d.id}">&times;</button>` : ''}
+      `;
+
+      if (d.id && !d.id.startsWith('default_')) {
+        li.querySelector('button').addEventListener('click', () => deleteSpecialDate(d.id));
+      }
+
+      specialDatesList.appendChild(li);
+    });
+  }
+
+  function updateNotifications(allDates) {
+    const now = new Date();
+
+    const upcoming = allDates.map(d => {
+      const dDate = d.date instanceof Date ? d.date : new Date(d.date);
+      const nextDate = d.recurring ? getNextOccurrence(dDate) : dDate;
+      const daysLeft = daysBetween(startOfDay(now), startOfDay(nextDate));
+      return { ...d, nextDate, daysLeft };
+    }).filter(d => d.daysLeft >= 0);
+
+    upcoming.sort((a, b) => a.daysLeft - b.daysLeft);
+
+    notificationsDiv.innerHTML = '';
+    upcoming.slice(0, 2).forEach(d => {
+      const p = document.createElement('p');
+      p.innerHTML = `<strong>${d.title}</strong> in <strong>${d.daysLeft === 0 ? 'Today' : d.daysLeft}</strong> day${d.daysLeft !== 1 ? 's' : ''}`;
+      notificationsDiv.appendChild(p);
+    });
+
+    if (currentUser?.metadata?.creationTime) {
+      const created = new Date(currentUser.metadata.creationTime);
+      const usageDays = daysBetween(startOfDay(created), startOfDay(now));
+      usageDaysElem.textContent = usageDays;
     }
   }
+
+  function loadSpecialDates() {
+    if (!currentUser) return;
+
+    db.collection('users').doc(currentUser.uid).collection('countdowns')
+      .get()
+      .then(snapshot => {
+        specialDates = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title,
+            date: data.date instanceof firebase.firestore.Timestamp ? data.date.toDate() : new Date(data.date),
+            recurring: data.recurring || false
+          };
+        });
+
+        const allDates = [...specialDates, ...getDefaultCountdowns()];
+        renderSpecialDates(allDates);
+        updateNotifications(allDates);
+      })
+      .catch(err => {
+        console.error('Error loading special dates:', err);
+      });
+  }
+
+  function deleteSpecialDate(id) {
+    if (!currentUser || !confirm('Delete this special date?')) return;
+
+    db.collection('users').doc(currentUser.uid).collection('countdowns').doc(id)
+      .delete()
+      .then(() => loadSpecialDates())
+      .catch(err => alert('Error deleting date: ' + err.message));
+  }
+
+  function addSpecialDate(title, dateStr) {
+    if (!currentUser) return;
+
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      alert('Invalid date');
+      return;
+    }
+
+    db.collection('users').doc(currentUser.uid).collection('countdowns')
+      .add({
+        title,
+        date: firebase.firestore.Timestamp.fromDate(date),
+        recurring: true
+      })
+      .then(() => {
+        closeAddDateModal();
+        loadSpecialDates();
+      })
+      .catch(err => alert('Error adding special date: ' + err.message));
+  }
+
+  function openAddDateModal() {
+    dateTitleInput.value = '';
+    dateValueInput.value = '';
+    addDateModal.classList.remove('hidden');
+  }
+
+  function closeAddDateModal() {
+    addDateModal.classList.add('hidden');
+  }
+
+  openAddDateBtn.addEventListener('click', openAddDateModal);
+  cancelAddDateBtn.addEventListener('click', closeAddDateModal);
+  saveAddDateBtn.addEventListener('click', () => {
+    const title = dateTitleInput.value.trim();
+    const date = dateValueInput.value;
+    if (!title || !date) {
+      alert('Please enter both title and date.');
+      return;
+    }
+    addSpecialDate(title, date);
+  });
+
+  auth.onAuthStateChanged(user => {
+    currentUser = user;
+    if (user) {
+      userInfo.textContent = `Welcome, ${user.email}`;
+      loadSpecialDates();
+    } else {
+      userInfo.textContent = 'Not signed in';
+      specialDatesList.innerHTML = '<li>Please sign in to view and add special dates.</li>';
+      notificationsDiv.innerHTML = '';
+      usageDaysElem.textContent = '';
+    }
+  });
+
+
+
+  
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobile-sidebar');
+    sidebar?.classList.toggle('-translate-x-full');
+    overlay?.classList.toggle('hidden');
+  }
+
+// Logout link
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    auth.signOut().then(() => window.location.href = '/logout')
+      .catch(() => window.location.href = '/logout');
+  });
+
+  
 </script>
+
+
 
 </body>
 </html>

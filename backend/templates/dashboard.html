@@ -331,54 +331,37 @@ nav button.active svg {
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+
 <script>
-  // Firebase config
+  // Firebase config (your project)
   const firebaseConfig = {
-    apiKey: "AIzaSyDZvQXmgnPD81cCdjVrgDn-QlaY_f5m2xE",
-    authDomain: "focusly-97e22.firebaseapp.com",
-    projectId: "focusly-97e22",
-    storageBucket: "focusly-97e22.appspot.com",
-    messagingSenderId: "109369885144",
-    appId: "1:109369885144:web:1f5c3627c4c5f6d4b372ad",
-    measurementId: "G-8GCFDG9EKL"
+    apiKey: "AIzaSyDp1PwJHxMfNjNrlOGV-XbiSju1TDQDfo0",
+    authDomain: "focusly-a01fb.firebaseapp.com",
+    projectId: "focusly-a01fb",
+    storageBucket: "focusly-a01fb.appspot.com",
+    messagingSenderId: "225376542906",
+    appId: "1:225376542906:web:2df140f814e2594d072283",
+    measurementId: "G-FY70D2J35M"
   };
-
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
   const auth = firebase.auth();
+  const db = firebase.firestore();
 
-
-  // Check for custom token in URL
-const firebaseToken = "{{ token | safe }}";
-
-if (firebaseToken) {
-  auth.signInWithCustomToken(firebaseToken)
-    .then(() => {
-      console.log('🔥 Firebase signed in with custom token');
-      window.history.replaceState({}, document.title, "/dashboard"); // Clean the URL
-    })
-    .catch((error) => {
-      console.error('❌ Firebase sign-in error:', error);
-    });
-}
-
-
-  // Elements references
+  // UI references
   const tasksContainer = document.getElementById('tasks-container');
   const noTasks = document.getElementById('no-tasks');
   const taskModal = document.getElementById('taskModal');
   const taskForm = document.getElementById('task-form');
-  const addTaskBtns = [document.getElementById('add-task-btn'), document.getElementById('add-task-btn2'), document.getElementById('add-task-dashed')];
+  const addTaskBtns = [
+    document.getElementById('add-task-btn'),
+    document.getElementById('add-task-btn2'),
+    document.getElementById('add-task-dashed')
+  ];
   const cancelBtn = document.getElementById('cancel-btn');
-
-  // Summary counters elements
   const totalTasksEl = document.getElementById('total-tasks');
   const lowPriorityEl = document.getElementById('low-priority');
   const mediumPriorityEl = document.getElementById('medium-priority');
   const highPriorityEl = document.getElementById('high-priority');
-
-  // Stats elements
   const statsTotal = document.getElementById('stats-total');
   const statsCompleted = document.getElementById('stats-completed');
   const statsPending = document.getElementById('stats-pending');
@@ -387,404 +370,268 @@ if (firebaseToken) {
   const prodText = document.getElementById('prod-text');
   const recentActivityEl = document.getElementById('recent-activity');
   let activityLog = [];
-  
-
-
-  let unsubscribeTasks = null;
   let currentFilter = 'all';
+  let unsubscribeTasks = null;
 
-  // Utility: Show/hide modal
-  function showModal() {
-    taskModal.classList.remove('hidden');
-  }
-  function hideModal() {
-    taskModal.classList.add('hidden');
-    taskForm.reset();
-  }
+  // Priority style map
+  const priorityColors = {
+    Low: 'text-green-700 bg-green-100',
+    Medium: 'text-yellow-700 bg-yellow-100',
+    High: 'text-red-700 bg-red-100'
+  };
 
-  // Open modal on Add Task button click
-  addTaskBtns.forEach(btn => btn && btn.addEventListener('click', showModal));
+  // Modal helpers
+  function showModal() { taskModal.classList.remove('hidden'); }
+  function hideModal() { taskModal.classList.add('hidden'); taskForm.reset(); }
+
+  addTaskBtns.forEach(btn => btn?.addEventListener('click', showModal));
   cancelBtn.addEventListener('click', hideModal);
 
-  // Helper: Update task summary cards and statistics
+  // Confirm modal promise
+  function showConfirm(message = "Are you sure?") {
+    return new Promise(resolve => {
+      const modal = document.getElementById('confirm-modal');
+      const msg = document.getElementById('confirm-message');
+      const yesBtn = document.getElementById('confirm-yes');
+      const noBtn = document.getElementById('confirm-no');
+      msg.textContent = message;
+      modal.classList.remove('hidden');
+      const cleanup = () => {
+        modal.classList.add('hidden');
+        yesBtn.removeEventListener('click', onYes);
+        noBtn.removeEventListener('click', onNo);
+      };
+      const onYes = () => { cleanup(); resolve(true); };
+      const onNo = () => { cleanup(); resolve(false); };
+      yesBtn.addEventListener('click', onYes);
+      noBtn.addEventListener('click', onNo);
+    });
+  }
+
+  // Format date/timestamp nicely
+  function formatDateTime(dateObj) {
+    if (!dateObj) return 'N/A';
+    const date = dateObj.toDate ? dateObj.toDate() : new Date(dateObj);
+    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  // Log activity and update UI list
+  function logActivity(msg) {
+    const entry = `${msg} – ${new Date().toLocaleString()}`;
+    activityLog.unshift(entry);
+    if (activityLog.length > 10) activityLog.pop();
+    recentActivityEl.innerHTML = '';
+    activityLog.forEach(line => {
+      const li = document.createElement('li');
+      li.textContent = line;
+      recentActivityEl.appendChild(li);
+    });
+  }
+
+  // Update summary numbers and progress bars
   function updateSummary(tasks) {
     const total = tasks.length;
     const low = tasks.filter(t => t.priority === 'Low').length;
     const medium = tasks.filter(t => t.priority === 'Medium').length;
     const high = tasks.filter(t => t.priority === 'High').length;
+    const completed = tasks.filter(t => t.status === 'completed').length;
+    const pending = total - completed;
+    const rate = total ? Math.round((completed / total) * 100) : 0;
 
     totalTasksEl.textContent = total;
     lowPriorityEl.textContent = low;
     mediumPriorityEl.textContent = medium;
     highPriorityEl.textContent = high;
 
-    const completed = tasks.filter(t => t.status === 'completed').length;
-    const pending = total - completed;
-    const rate = total ? Math.round((completed / total) * 100) : 0;
-
     statsTotal.textContent = total;
     statsCompleted.textContent = completed;
     statsPending.textContent = pending;
     statsRate.textContent = rate + '%';
 
-    //prodBar.style.width = rate + '%';
-    //prodText.textContent = `${completed}/${total} (${rate}%)`;
-
-    // Update productivity bars
     prodBar.style.width = rate + '%';
     prodText.textContent = `${completed}/${total} (${rate}%)`;
 
-    // If Task Statistics has its own progress bar/text, update it too
     const statsProdBar = document.getElementById('stats-prod-bar');
     const statsProdText = document.getElementById('stats-prod-text');
-
     if (statsProdBar && statsProdText) {
-        statsProdBar.style.width = rate + '%';
-        statsProdText.textContent = `${completed}/${total} (${rate}%)`;
+      statsProdBar.style.width = rate + '%';
+      statsProdText.textContent = `${completed}/${total} (${rate}%)`;
     }
-
 
     noTasks.classList.toggle('hidden', total > 0);
     tasksContainer.classList.toggle('hidden', total === 0);
   }
 
-  // Priority color classes for badge
-  const priorityColors = {
-    Low: 'text-green-700 bg-green-100',
-    Medium: 'text-yellow-700 bg-yellow-100',
-    High: 'text-red-700 bg-red-100',
-  };
-
-  // Format date helper
-  function formatDateTime(dateObj) {
-    if (!dateObj) return 'N/A';
-    const date = dateObj instanceof Date ? dateObj : dateObj.toDate ? dateObj.toDate() : new Date(dateObj);
-    const formattedDate = date.toLocaleDateString();
-    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    return `${formattedDate} ${formattedTime}`;
-  }
-
-  function logActivity(message) {
-  const timestamp = new Date().toLocaleString();
-  const entry = `${message} – ${timestamp}`;
-
-  activityLog.unshift(entry); // Add to beginning
-  if (activityLog.length > 10) activityLog.pop(); // Keep only 10 items
-
-  if (recentActivityEl) {
-    recentActivityEl.innerHTML = ''; // Clear current list
-    activityLog.forEach(item => {
-      const li = document.createElement('li');
-      li.textContent = item;
-      recentActivityEl.appendChild(li);
-    });
-  }
-}
-
-
-  // Render tasks in the container
+  // Render each task with actions
   function renderTasks(tasks) {
     tasksContainer.innerHTML = '';
-
     tasks.forEach(task => {
       const div = document.createElement('div');
-      div.className = 'task-item bg-white shadow p-4 rounded-lg mb-2 relative'; // relative for menu positioning
-      div.dataset.status = task.status || 'pending';
-
+      div.className = 'task-item bg-white shadow p-4 rounded-lg mb-2 relative';
+      const status = task.status || 'pending';
       const priority = task.priority || 'Medium';
       const priorityClass = priorityColors[priority] || priorityColors.Medium;
-
-      // Prepare dates
-      const addedDateStr = formatDateTime(task.createdAt);
-      const dueDateStr = task.dueDate ? formatDateTime(task.dueDate) : 'No due date';
-
-      // Task status text
-      const statusText = task.status || 'pending';
+      div.dataset.status = status;
 
       div.innerHTML = `
         <div class="flex justify-between items-start mb-2">
           <span class="inline-block px-2 py-1 rounded ${priorityClass} font-semibold text-sm uppercase">${priority}</span>
           <div class="relative inline-block">
-            <button class="task-menu-btn text-gray-500 hover:text-gray-800 focus:outline-none text-2xl leading-none">⋮</button>
+            <button class="task-menu-btn text-gray-500 hover:text-gray-800 text-2xl leading-none">⋮</button>
             <div class="task-menu hidden absolute right-0 mt-2 w-32 bg-white border rounded shadow-md z-10">
               <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 delete-btn text-red-600">Delete</button>
-              <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 toggle-status-btn">${statusText === 'pending' ? 'Mark Completed' : 'Mark Pending'}</button>
+              <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 toggle-status-btn">${status === 'pending' ? 'Mark Completed' : 'Mark Pending'}</button>
             </div>
           </div>
         </div>
         <h4 class="font-bold">${task.title}</h4>
         <p class="text-sm text-gray-600 mb-1">${task.description || ''}</p>
-        <p class="text-xs text-gray-400 mb-1">Due: ${dueDateStr}</p>
-        <p class="text-xs text-gray-400 mb-1">Added: ${addedDateStr}</p>
-        <p class="text-xs text-gray-400 capitalize font-medium">${statusText}</p>
+        <p class="text-xs text-gray-400 mb-1">Due: ${formatDateTime(task.dueDate)}</p>
+        <p class="text-xs text-gray-400 mb-1">Added: ${formatDateTime(task.createdAt)}</p>
+        <p class="text-xs text-gray-400 capitalize font-medium">${status}</p>
       `;
-
       tasksContainer.appendChild(div);
 
-      // Add event listeners for menu button
       const menuBtn = div.querySelector('.task-menu-btn');
       const menu = div.querySelector('.task-menu');
-
-      menuBtn.addEventListener('click', (e) => {
+      menuBtn.addEventListener('click', e => {
         e.stopPropagation();
-        // Close other menus
-        document.querySelectorAll('.task-menu').forEach(m => {
-          if (m !== menu) m.classList.add('hidden');
-        });
+        document.querySelectorAll('.task-menu').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
         menu.classList.toggle('hidden');
       });
+      document.addEventListener('click', () => menu.classList.add('hidden'));
 
-      // Close menu if clicking outside
-      document.addEventListener('click', () => {
-        menu.classList.add('hidden');
-      });
-
-      // Delete button event
-const deleteBtn = div.querySelector('.delete-btn');
-deleteBtn.addEventListener('click', async () => {
-  const confirmed = await showConfirm('Are you sure you want to delete this task?');
-  if (confirmed) {
-    try {
-      await db.collection('tasks').doc(task.id).delete();
-      logActivity(`Deleted task "${task.title}"`);
-    } catch (err) {
-      alert('Failed to delete task: ' + err.message);
-    }
-  }
-});
-
-
-      // Toggle status button event
-      const toggleStatusBtn = div.querySelector('.toggle-status-btn');
-      toggleStatusBtn.addEventListener('click', async () => {
-        const newStatus = statusText === 'pending' ? 'completed' : 'pending';
-        try {
-          await db.collection('tasks').doc(task.id).update({
-            status: newStatus
-          });
-          logActivity(`Marked task "${task.title}" as ${newStatus}`);
-
-        } catch (err) {
-          alert('Failed to update task status: ' + err.message);
+      // delete action
+      div.querySelector('.delete-btn').addEventListener('click', async () => {
+        if (await showConfirm(`Delete "${task.title}"?`)) {
+          await db.collection('tasks').doc(task.id).delete();
+          logActivity(`Deleted task "${task.title}"`);
         }
+      });
+      // toggle status
+      div.querySelector('.toggle-status-btn').addEventListener('click', async () => {
+        const newStatus = status === 'pending' ? 'completed' : 'pending';
+        await db.collection('tasks').doc(task.id).update({ status: newStatus });
+        logActivity(`Marked task "${task.title}" as ${newStatus}`);
       });
     });
   }
 
-  // Load tasks from Firestore with filtering
+  // Load and listen to tasks based on filter
   function loadTasks(filter = 'all') {
     const user = auth.currentUser;
     if (!user) return;
-
     if (unsubscribeTasks) unsubscribeTasks();
 
-    let query = db.collection('tasks').where('userId', '==', user.uid);
+    let query = db.collection('tasks').where('uid', '==', user.uid);
 
-    // Apply filters
-    switch (filter) {
-      case 'completed':
-        query = query.where('status', '==', 'completed');
-        break;
-      case 'pending':
-        query = query.where('status', '==', 'pending');
-        break;
-      case 'high':
-        query = query.where('priority', '==', 'High');
-        break;
-      case 'medium':
-        query = query.where('priority', '==', 'Medium');
-        break;
-      case 'low':
-        query = query.where('priority', '==', 'Low');
-        break;
-      case 'today':
-        // Filter tasks due today (if dueDate field is stored)
-        const startOfDay = new Date();
-        startOfDay.setHours(0,0,0,0);
-        const endOfDay = new Date();
-        endOfDay.setHours(23,59,59,999);
-        query = query.where('dueDate', '>=', startOfDay).where('dueDate', '<=', endOfDay);
-        break;
-      case 'week':
-        // Filter tasks due this week
-        const now = new Date();
-        const day = now.getDay();
-        const diffToStartWeek = now.getDate() - day + (day === 0 ? -6 : 1); // Monday as first day
-        const startWeek = new Date(now.setDate(diffToStartWeek));
-        startWeek.setHours(0,0,0,0);
-        const endWeek = new Date(startWeek);
-        endWeek.setDate(endWeek.getDate() + 6);
-        endWeek.setHours(23,59,59,999);
-        query = query.where('dueDate', '>=', startWeek).where('dueDate', '<=', endWeek);
-        break;
-      default:
-        // no additional filter
-        break;
+    if (['completed','pending','high','medium','low','today','week'].includes(filter)) {
+      switch (filter) {
+        case 'completed': query = query.where('status', '==', 'completed'); break;
+        case 'pending': query = query.where('status', '==', 'pending'); break;
+        case 'high': query = query.where('priority', '==', 'High'); break;
+        case 'medium': query = query.where('priority', '==', 'Medium'); break;
+        case 'low': query = query.where('priority', '==', 'Low'); break;
+        case 'today': {
+          const now = new Date(), start = new Date(), end = new Date();
+          start.setHours(0,0,0,0);
+          end.setHours(23,59,59,999);
+          query = query.where('dueDate', '>=', start).where('dueDate', '<=', end);
+          break;
+        }
+        case 'week': {
+          const now = new Date(), start = new Date();
+          const day = now.getDay(), diff = now.getDate() - day + (day === 0 ? -6 : 1);
+          start.setDate(diff); start.setHours(0,0,0,0);
+          const end = new Date(start);
+          end.setDate(end.getDate() + 6); end.setHours(23,59,59,999);
+          query = query.where('dueDate', '>=', start).where('dueDate', '<=', end);
+          break;
+        }
+      }
     }
-
-    unsubscribeTasks = query.onSnapshot(snapshot => {
-      const tasks = [];
-      snapshot.forEach(doc => {
-        tasks.push({ id: doc.id, ...doc.data() });
-      });
+    unsubscribeTasks = query.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+      const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       updateSummary(tasks);
       renderTasks(tasks);
     });
   }
 
-
-  // Authentication state observer
- auth.onAuthStateChanged(user => {
-  const userInfoDiv = document.getElementById('user-info');
-
-  if (user) {
-    // Show user details
-    const name = user.displayName || 'No name';
-    const email = user.email || 'No email';
-    const uid = user.uid;
-
-    userInfoDiv.innerHTML = `
-      <p><strong>Email:</strong> ${email}</p>
-      <p><small>User ID: ${uid}</small></p>
-    `;
-
-    // Load tasks for this user
-    loadTasks(currentFilter);
-
-    // Setup form submit (safe because user is now ready)
-    taskForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const title = taskForm['title'].value.trim();
-      const description = taskForm['description'].value.trim();
-      const priority = taskForm['priority'].value;
-      const dueDateVal = taskForm['dueDate'].value;
-      const status = taskForm['status'].value || 'pending';
-
-      if (!title) {
-        alert('Task title is required.');
-        return;
-      }
-
-      let dueDate = null;
-      if (dueDateVal) {
-        dueDate = firebase.firestore.Timestamp.fromDate(new Date(dueDateVal));
-      }
-
-      try {
-        await db.collection('tasks').add({
-          userId: user.uid,
-          title,
-          description,
-          priority,
-          dueDate,
-          status,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        hideModal();
-        logActivity(`Added task "${title}"`);
-      } catch (err) {
-        alert('Failed to add task: ' + err.message);
-      }
-    });
-
-  } else {
-    userInfoDiv.textContent = 'No user logged in';
-    tasksContainer.innerHTML = '<p class="text-center text-gray-500">Please log in to view tasks.</p>';
-    noTasks.classList.add('hidden');
-  }
-});
-
-
-
+  // Setup filter nav buttons
   function setupFilterButton(id, filterValue) {
-  const btn = document.getElementById(id);
-  if (btn) {
-    btn.addEventListener('click', () => {
+    const btn = document.getElementById(`filter-${filterValue}`);
+    if (btn) btn.addEventListener('click', () => {
       currentFilter = filterValue;
       loadTasks(filterValue);
       activateNav(btn);
     });
   }
-}
+  [
+    'all', 'completed', 'pending', 'high', 'medium', 'low', 'today', 'week'
+  ].forEach(f => setupFilterButton(f, f));
 
-// Setup filter buttons safely
-['all', 'today', 'week', 'high', 'medium', 'low'].forEach(filter => {
-  setupFilterButton(`filter-${filter}`, filter);
-});
-
-
-function showConfirm(message = "Are you sure?") {
-  return new Promise((resolve) => {
-    const modal = document.getElementById('confirm-modal');
-    const msg = document.getElementById('confirm-message');
-    const yesBtn = document.getElementById('confirm-yes');
-    const noBtn = document.getElementById('confirm-no');
-
-    msg.textContent = message;
-    modal.classList.remove('hidden');
-
-    const cleanup = () => {
-      modal.classList.add('hidden');
-      yesBtn.removeEventListener('click', onYes);
-      noBtn.removeEventListener('click', onNo);
-    };
-
-    const onYes = () => {
-      cleanup();
-      resolve(true);
-    };
-
-    const onNo = () => {
-      cleanup();
-      resolve(false);
-    };
-
-    yesBtn.addEventListener('click', onYes);
-    noBtn.addEventListener('click', onNo);
-  });
-}
-
-document.getElementById('logout-btn').addEventListener('click', () => {
-  firebase.auth().signOut().then(() => {
-    window.location.href = '/logout'; // Call Flask logout route
-  }).catch((error) => {
-    console.error('Firebase logout error:', error);
-    // Fallback to Flask logout anyway
-    window.location.href = '/logout';
-  });
-});
-
-
-function activateNav(element) {
-  // Get all nav buttons inside <nav>
-  const navButtons = document.querySelectorAll('nav button');
-
-  // Remove 'active' class from all buttons
-  navButtons.forEach(btn => btn.classList.remove('active'));
-
-  // Add 'active' class to the clicked button
-  element.classList.add('active');
-}
-
+  function activateNav(btn) {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
   function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('mobile-sidebar');
-
-    if (sidebar && overlay) {
-      // Toggle sidebar visibility
-      sidebar.classList.toggle('-translate-x-full');
-      overlay.classList.toggle('hidden');
-    } else {
-      console.warn('Sidebar or overlay not found');
-    }
+    sidebar?.classList.toggle('-translate-x-full');
+    overlay?.classList.toggle('hidden');
   }
 
+  // Auth watcher
+  auth.onAuthStateChanged(user => {
+    const userInfoDiv = document.getElementById('user-info');
+    if (!user) {
+      userInfoDiv.textContent = 'Not logged in';
+      tasksContainer.innerHTML = '<p class="text-center text-gray-500">Please sign in.</p>';
+      noTasks.classList.add('hidden');
+      return;
+    }
+    userInfoDiv.innerHTML = `<p><strong>Email:</strong> ${user.email}</p><p><small>ID: ${user.uid}</small></p>`;
+    loadTasks(currentFilter);
 
+    taskForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const tn = taskForm['title'].value.trim();
+      if (!tn) { alert('Title required'); return; }
+      let dueTimestamp = null;
+      if (taskForm['dueDate'].value) {
+        dueTimestamp = firebase.firestore.Timestamp.fromDate(new Date(taskForm['dueDate'].value));
+      }
+      await db.collection('tasks').add({
+        uid: user.uid,
+        title: tn,
+        description: taskForm['description'].value.trim(),
+        priority: taskForm['priority'].value,
+        dueDate: dueTimestamp,
+        status: taskForm['status'].value,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      hideModal();
+      logActivity(`Added task "${tn}"`);
+    });
+  });
 
+  // Logout link
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    auth.signOut().then(() => window.location.href = '/logout')
+      .catch(() => window.location.href = '/logout');
+  });
 
+  
 
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      window.location.reload();
+    }
+  });
+  
 </script>
+
+
 
 
 

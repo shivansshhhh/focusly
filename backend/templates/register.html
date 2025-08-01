@@ -60,42 +60,47 @@
 
       <!-- Email Sign Up Form -->
       <form id="email-register" action="/register" method="POST" class="space-y-4">
-        <input type="email" name="email" placeholder="Email"
+        <input type="email" id="register-email" name="email" placeholder="Email"
                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary" required>
-        <!-- Password Field with Toggle Eye Icon -->
-<div class="relative">
-  <input type="password" name="password" id="password"
-         placeholder="Password (min 6 characters)" minlength="6"
-         class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary pr-10" required>
-  <span class="absolute right-3 top-2.5 cursor-pointer text-gray-500" onclick="togglePassword('password')">
-    <!-- Eye Icon -->
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-         viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-      <path stroke-linecap="round" stroke-linejoin="round"
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      <path stroke-linecap="round" stroke-linejoin="round"
-            d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
-    </svg>
-  </span>
-</div>
 
-<!-- Confirm Password Field with Toggle Eye Icon -->
-<div class="relative">
-  <input type="password" name="password_confirm" id="password_confirm"
-         placeholder="Confirm Password" minlength="6"
-         class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary pr-10" required>
-  <span class="absolute right-3 top-2.5 cursor-pointer text-gray-500" onclick="togglePassword('password_confirm')">
-    <!-- Eye Icon -->
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-         viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-      <path stroke-linecap="round" stroke-linejoin="round"
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      <path stroke-linecap="round" stroke-linejoin="round"
-            d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
-    </svg>
-  </span>
-</div>
+               <!-- Password Field -->
+      <div class="relative">
+        <input type="password" name="password" id="register-password"
+               placeholder="Password (min 6 characters)" minlength="6"
+               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary pr-10" required>
+        <span class="absolute right-3 top-2.5 cursor-pointer text-gray-500" data-toggle="register-password">
+          <!-- Eye Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z"/>
+          </svg>
+          <!-- Eye Slash Icon (hidden by default) -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-slash-icon hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.07 10.07 0 012.291-3.568M6.333 6.333A9.952 9.952 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.048 10.048 0 01-4.233 5.099M3 3l18 18"/>
+          </svg>
+        </span>
+      </div>
 
+      <!-- Confirm Password Field -->
+      <div class="relative">
+        <input type="password" name="password_confirm" id="register-password-confirm"
+               placeholder="Confirm Password" minlength="6"
+               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary pr-10" required>
+        <span class="absolute right-3 top-2.5 cursor-pointer text-gray-500" data-toggle="register-password-confirm">
+          <!-- Eye Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z"/>
+          </svg>
+          <!-- Eye Slash Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-slash-icon hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.07 10.07 0 012.291-3.568M6.333 6.333A9.952 9.952 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.048 10.048 0 01-4.233 5.099M3 3l18 18"/>
+          </svg>
+        </span>
+      </div>
+
+
+ 
 
         <button type="submit"
                 class="w-full bg-primary text-white py-2 rounded hover:bg-blue-700 transition">
@@ -114,6 +119,7 @@
           <option value="+49" {% if country_code == "+49" %}selected{% endif %}>🇩🇪 Germany (+49)</option>
           <option value="+1" {% if country == "Canada" %}selected{% endif %}>🇨🇦 Canada (+1)</option>
         </select>
+
 
         <input id="phone-field" type="tel" name="phone" placeholder="Mobile Number"
                class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary" required>
@@ -148,11 +154,13 @@
 
       <!-- Social Sign Ups -->
       <div class="space-y-3 mt-6">
-        <a href="/auth/google"
-           class="w-full flex justify-center items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100 transition">
-          <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google logo" />
-          Continue with Google
-        </a>
+        <button id="google-signin-btn"
+        type="button"
+        class="w-full flex justify-center items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100 transition">
+  <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google logo" />
+  Continue with Google
+</button>
+
       </div>
 
       <!-- Toggle Sign Up Mode Button -->
@@ -179,7 +187,8 @@
       <!-- Already have account -->
       <p class="text-sm text-center mt-6">
         Already have an account?
-        <a href="#" onclick="replacePage('/login'); return false;" class="text-primary font-medium hover:underline">Sign in</a>
+        <a href="/login" class="text-primary font-medium hover:underline">Sign in</a>
+
       </p>
 
     </div>
@@ -188,148 +197,196 @@
   <div id="recaptcha-container"></div>
 
   <script>
-    // Mobile menu toggle
-    const menuBtn = document.getElementById('menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-    let menuOpen = false;
-    menuBtn?.addEventListener('click', () => {
-      menuOpen = !menuOpen;
-      mobileMenu.classList.toggle('max-h-0', !menuOpen);
-      mobileMenu.classList.toggle('max-h-60', menuOpen);
-    });
 
-    // Toggle between email and phone register
-    const toggleregisterMode = document.getElementById('toggle-register-mode');
-    const toggleLabel = document.getElementById('toggle-label');
-    const toggleIconPhone = document.getElementById('icon-email');
-    const toggleIconEmail = document.getElementById('icon-phone');
-    const emailregister = document.getElementById('email-register');
-    const phoneregister = document.getElementById('phone-register');
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDp1PwJHxMfNjNrlOGV-XbiSju1TDQDfo0",
+    authDomain: "focusly-a01fb.firebaseapp.com",
+    projectId: "focusly-a01fb",
+    storageBucket: "focusly-a01fb.appspot.com",
+    messagingSenderId: "225376542906",
+    appId: "1:225376542906:web:2df140f814e2594d072283",
+    measurementId: "G-FY70D2J35M"
+  };
 
-    toggleregisterMode?.addEventListener('click', () => {
-      const isEmailVisible = !emailregister.classList.contains('hidden');
+  firebase.initializeApp(firebaseConfig);
+  const provider = new firebase.auth.GoogleAuthProvider();
 
-      if (isEmailVisible) {
-        // Show phone register
-        emailregister.classList.add('hidden');
-        phoneregister.classList.remove('hidden');
-        toggleLabel.textContent = 'Continue with Email';
-        toggleIconPhone.classList.remove('hidden');
-        toggleIconEmail.classList.add('hidden');
-      } else {
-        // Show email register
-        phoneregister.classList.add('hidden');
-        emailregister.classList.remove('hidden');
-        toggleLabel.textContent = 'Continue with Phone';
-        toggleIconPhone.classList.add('hidden');
-        toggleIconEmail.classList.remove('hidden');
+  // Google Sign-in
+  document.getElementById("google-signin-btn").addEventListener("click", function () {
+    firebase.auth().signInWithPopup(provider)
+      .then((result) => result.user.getIdToken())
+      .then((idToken) => {
+        return fetch("/google-signin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken })
+        });
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = "/dashboard";
+        } else {
+          alert(data.message || "Authentication failed.");
+        }
+      })
+      .catch((error) => {
+        console.error("Google Sign-In Error:", error);
+        alert("Google Sign-In failed: " + error.message);
+      });
+  });
+
+  // Phone/OTP logic (copied exactly from your working version)
+  let confirmationResult = null;
+
+  document.getElementById('send-otp-btn').addEventListener('click', function () {
+    const phoneNumber = document.getElementById('phone-field').value;
+    const countryCode = document.querySelector('[name="country_code"]').value;
+    const fullPhoneNumber = countryCode + phoneNumber;
+
+    // Setup invisible reCAPTCHA
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+      size: 'invisible',
+      callback: function () {
+        sendOTP(fullPhoneNumber);
       }
     });
 
-    // Firebase initialization and OTP handling for phone register
-  const firebaseConfig = {
-    apiKey: "AIzaSyDZvQXmgnPD81cCdjVrgDn-QlaY_f5m2xE",
-    authDomain: "focusly-97e22.firebaseapp.com",
-    projectId: "focusly-97e22",
-    storageBucket: "focusly-97e22.firebasestorage.app",
-    messagingSenderId: "109369885144",
-    appId: "1:109369885144:web:1f5c3627c4c5f6d4b372ad",
-    measurementId: "G-8GCFDG9EKL"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-
-  let recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-    size: 'invisible'
+    sendOTP(fullPhoneNumber);
   });
 
-  const sendOtpBtn = document.getElementById('send-otp-btn');
-  const verifyOtpBtn = document.getElementById('verify-otp-btn');
-  const phoneField = document.getElementById('phone-field');
-  const otpField = document.getElementById('otp-field');
-  const countrySelect = document.querySelector('select[name="country_code"]');
-  const otpMessage = document.getElementById('otp-message');
-  let confirmationResult;
+  function sendOTP(fullPhoneNumber) {
+    firebase.auth().signInWithPhoneNumber(fullPhoneNumber, window.recaptchaVerifier)
+      .then((result) => {
+        confirmationResult = result;
+        document.getElementById('otp-message').innerText = "OTP sent!";
+        document.getElementById('otp-field').classList.remove('hidden');
+        document.getElementById('verify-otp-btn').classList.remove('hidden');
 
-  function showOtpMessage(text, type = 'error') {
-    otpMessage.textContent = text;
-    otpMessage.className = 'text-sm mt-1 min-h-[1.5rem] ' + (type === 'success' ? 'text-green-600' : 'text-red-600');
+        // Hide send button to avoid re-sending multiple times
+        document.getElementById('send-otp-btn').classList.add('hidden');
+      })
+      .catch((error) => {
+        console.error("OTP Error:", error);
+        document.getElementById('otp-message').innerText = error.message;
+      });
   }
 
-  sendOtpBtn.addEventListener('click', function (e) {
-    e.preventDefault();
-
-    const countryCode = countrySelect.value;
-    const phoneNumber = phoneField.value.trim();
-    if (!phoneNumber || phoneNumber.length < 6) {
-      showOtpMessage("Please enter a valid mobile number.");
+  document.getElementById('verify-otp-btn').addEventListener('click', function () {
+    const code = document.getElementById('otp-field').value;
+    if (!confirmationResult) {
+      alert("Please request OTP first.");
       return;
     }
 
-    const fullPhoneNumber = countryCode + phoneNumber;
-    sendOtpBtn.disabled = true;
-    sendOtpBtn.textContent = "Sending...";
+    confirmationResult.confirm(code)
+      .then((result) => result.user.getIdToken())
+      .then((idToken) => {
+        return fetch('/phone-signin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken })
+        });
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = "/dashboard";
+        } else {
+          alert(data.message || "Authentication failed.");
+        }
+      })
+      .catch((error) => {
+        console.error("Verify OTP Error:", error);
+        document.getElementById('otp-message').innerText = error.message;
+      });
+  });
 
-    auth.signInWithPhoneNumber(fullPhoneNumber, recaptchaVerifier)
-      .then(result => {
-        confirmationResult = result;
-        otpField.classList.remove('hidden');
-        verifyOtpBtn.classList.remove('hidden');
-        sendOtpBtn.classList.add('hidden');
-        showOtpMessage("OTP sent successfully. Please check your phone.", 'success');
+  // Toggle between email and phone register mode
+  document.getElementById('toggle-register-mode').addEventListener('click', function () {
+    const emailForm = document.getElementById('email-register');
+    const phoneForm = document.getElementById('phone-register');
+    const iconPhone = document.getElementById('icon-phone');
+    const iconEmail = document.getElementById('icon-email');
+    const toggleLabel = document.getElementById('toggle-label');
+    const isPhone = phoneForm.classList.contains('hidden');
+
+    if (isPhone) {
+      emailForm.classList.add('hidden');
+      phoneForm.classList.remove('hidden');
+      iconPhone.classList.add('hidden');
+      iconEmail.classList.remove('hidden');
+      toggleLabel.textContent = 'Continue with Email';
+    } else {
+      phoneForm.classList.add('hidden');
+      emailForm.classList.remove('hidden');
+      iconPhone.classList.remove('hidden');
+      iconEmail.classList.add('hidden');
+      toggleLabel.textContent = 'Continue with Phone';
+    }
+  });
+
+  // Password show/hide toggle
+  document.querySelectorAll('[data-toggle]').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const inputId = toggle.getAttribute('data-toggle');
+      const input = document.getElementById(inputId);
+      const eyeIcon = toggle.querySelector('.eye-slash-icon');
+      const eyeSlashIcon = toggle.querySelector('.eye-icon');
+      const isPassword = input.getAttribute('type') === 'password';
+
+      input.setAttribute('type', isPassword ? 'text' : 'password');
+      eyeIcon.classList.toggle('hidden', !isPassword);
+      eyeSlashIcon.classList.toggle('hidden', isPassword);
+    });
+  });
+
+  document.getElementById("email-register").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById("register-email").value.trim();
+    const password = document.getElementById("register-password").value;
+    const confirm = document.getElementById("register-password-confirm").value;
+
+    if (!email || !password || !confirm) {
+      alert("Please fill out all fields.");
+      return;
+    }
+
+    if (password !== confirm) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters.");
+      return;
+    }
+
+    firebase.auth().createUserWithEmailAndPassword(email, password)
+      .then(userCredential => userCredential.user.getIdToken())
+      .then(idToken => {
+        return fetch("/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken })
+        });
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = "/dashboard";
+        } else {
+          alert(data.message || "Registration failed.");
+        }
       })
       .catch(error => {
-        showOtpMessage('Error sending OTP: ' + error.message);
-        recaptchaVerifier.clear();
-        recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-          size: 'invisible'
-        });
-        sendOtpBtn.disabled = false;
-        sendOtpBtn.textContent = "Get OTP";
+        console.error("Registration error:", error);
+        alert(error.message);
       });
   });
-
-  verifyOtpBtn.addEventListener('click', function (e) {
-    e.preventDefault();
-    const otp = otpField.value.trim();
-
-    if (!otp || otp.length < 4) {
-      showOtpMessage("Please enter the OTP.");
-      return;
-    }
-
-    verifyOtpBtn.disabled = true;
-    verifyOtpBtn.textContent = "Verifying...";
-
-    confirmationResult.confirm(otp)
-      .then(result => {
-        showOtpMessage('Phone number verified successfully!', 'success');
-        setTimeout(() => {
-          window.location.href = '/dashboard';
-        }, 1000);
-      })
-      .catch(err => {
-        showOtpMessage('Invalid OTP. Please try again.');
-        verifyOtpBtn.disabled = false;
-        verifyOtpBtn.textContent = "Verify OTP";
-      });
-  });
-</script>
-<script>
-  function replacePage(url) {
-    window.location.replace(url);
-  }
-</script>
-
-<script>
-  function togglePassword(fieldId) {
-    const field = document.getElementById(fieldId);
-    if (field.type === "password") {
-      field.type = "text";
-    } else {
-      field.type = "password";
-    }
-  }
+  
 </script>
 
 </body>

@@ -191,11 +191,7 @@ nav button.active svg {
           <button id="resetBtn" class="px-6 py-3 bg-gray-300 text-gray-800 rounded-full text-lg">Reset</button>
         </div>
 
-        <div class="mt-4 flex justify-center">
-          <button id="openPopupBtn" class="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700 shadow">
-            🪟 Show Floating Timer
-          </button>
-        </div>
+      
       </div>
     </div>
 
@@ -350,537 +346,293 @@ This method helps improve focus, reduce mental fatigue, and boost overall produc
 
 
 <script>
-  // Constants
-  const FULL_DASH_ARRAY = 2 * Math.PI * 45;
 
-  // DOM Elements
-  const progressCircle = document.getElementById('progressCircle');
-  const resetBtn = document.getElementById('resetBtn');
+  // Firebase config (use your own config)
+const firebaseConfig = {
+  apiKey: "AIzaSyDp1PwJHxMfNjNrlOGV-XbiSju1TDQDfo0",
+  authDomain: "focusly-a01fb.firebaseapp.com",
+  projectId: "focusly-a01fb",
+  storageBucket: "focusly-a01fb.appspot.com",
+  messagingSenderId: "225376542906",
+  appId: "1:225376542906:web:2df140f814e2594d072283",
+  measurementId: "G-FY70D2J35M"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+  // Elements
   const pomoBtn = document.getElementById('pomoBtn');
   const stopwatchBtn = document.getElementById('stopwatchBtn');
   const timerDisplay = document.getElementById('timerDisplay');
-  const tickMarks = document.getElementById('tickMarks');
   const startBtn = document.getElementById('startBtn');
-  const streakEl = document.getElementById('streakCount');
+  const resetBtn = document.getElementById('resetBtn');
+  const progressCircle = document.getElementById('progressCircle');
+  const streakCount = document.getElementById('streakCount');
+  const alertSound = document.getElementById('alertSound');
+  const proTip = document.getElementById('pro-tip');
 
-  // Mode flag to know which timer is shown
-  let mode = 'pomo';
+  // Constants for circle
+  const FULL_DASH_ARRAY = 282.6; // 2 * π * r(45)
+  
+  // Pomodoro timings in seconds
+  const POMO_WORK = 25 * 60;
+  const POMO_SHORT_BREAK = 5 * 60;
+  const POMO_LONG_BREAK = 15 * 60;
+  const LONG_BREAK_INTERVAL = 3; // every 3rd pomodoro is long break
 
-  // Separate timers and states for Pomodoro and Stopwatch
-  let pomo = {
-    seconds: 1500,
-    initial: 1500,
-    isRunning: false,
-    breakMode: false,
-    pomodoroCount: 0,
-    timerId: null,
-  };
 
-  let stopwatch = {
-    seconds: 0,
-    isRunning: false,
-    timerId: null,
-  };
+  // State variables
+  let mode = 'pomodoro'; // or 'stopwatch'
+  let timer = null;
+  let timeLeft = POMO_WORK; 
+  let isRunning = false;
+  let pomodoroCount = 0;
+  let onBreak = false;
 
-  // Firebase Setup (keep as-is)
-  const firebaseConfig = {
-    apiKey: "AIzaSyDZvQXmgnPD81cCdjVrgDn-QlaY_f5m2xE",
-    authDomain: "focusly-97e22.firebaseapp.com",
-    projectId: "focusly-97e22",
-    storageBucket: "focusly-97e22.appspot.com",
-    messagingSenderId: "109369885144",
-    appId: "1:109369885144:web:1f5c3627c4c5f6d4b372ad",
-    measurementId: "G-8GCFDG9EKL"
-  };
+  // Stopwatch state
+  let stopwatchInterval = null;
+  let stopwatchTime = 0; // in milliseconds
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  // Format seconds to MM:SS
-  function formatTime(sec) {
-    const m = String(Math.floor(sec / 60)).padStart(2, '0');
-    const s = String(sec % 60).padStart(2, '0');
-    return `${m}:${s}`;
+  // Initialize UI
+  function init() {
+    updateTimerDisplay(formatTime(timeLeft));
+    updateProgress(1);
+    streakCount.textContent = pomodoroCount;
+    updateProTip();
+    updateModeUI();
   }
 
-  // Update progress circle for Pomodoro
-  function updateProgress(initialTime, currentTime) {
-    const percent = currentTime / initialTime;
-    const offset = FULL_DASH_ARRAY * (1 - percent);
-    if (progressCircle) progressCircle.style.strokeDashoffset = offset;
+  // Format seconds as MM:SS
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
   }
 
-  // Draw ticks for Stopwatch mode
-  function drawTicks() {
-    if (!tickMarks) return;
-    tickMarks.innerHTML = '';
-    for (let i = 0; i < 60; i++) {
-      const tick = document.createElement('div');
-      tick.style.width = '2px';
-      tick.style.height = '8px';
-      tick.style.background = '#999';
-      tick.style.position = 'absolute';
-      tick.style.top = '0';
-      tick.style.left = '50%';
-      tick.style.transform = `rotate(${i * 6}deg) translateY(10px)`;
-      tick.style.transformOrigin = 'bottom center';
-      tickMarks.appendChild(tick);
-    }
+  // Format milliseconds for stopwatch as HH:MM:SS
+  function formatStopwatch(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
   }
 
-  // Update display according to current mode
-  function updateDisplay() {
-    if (!timerDisplay) return;
+  // Update timer display text
+  function updateTimerDisplay(text) {
+    timerDisplay.textContent = text;
+  }
 
-    if (mode === 'pomo') {
-      timerDisplay.textContent = formatTime(pomo.seconds);
-      if (tickMarks) tickMarks.innerHTML = '';
-      updateProgress(pomo.initial, pomo.seconds);
-      // Update progress circle color based on break mode
-      if (progressCircle)
-        progressCircle.setAttribute('stroke', pomo.breakMode ? '#22c55e' : '#2563eb');
-      if (streakEl) streakEl.textContent = pomo.pomodoroCount;
+  // Update circular progress: ratio 0-1
+  function updateProgress(ratio) {
+  const offset = FULL_DASH_ARRAY * (1 - ratio);
+  progressCircle.style.strokeDashoffset = offset;
+  
+  if (onBreak) {
+    // Green color during break
+    progressCircle.style.stroke = '#22c55e'; // Tailwind green-500
+  } else {
+    // Default color (blue)
+    progressCircle.style.stroke = '#3b82f6'; // Tailwind blue-500
+  }
+}
+
+
+  // Start Pomodoro timer
+  function startPomodoro() {
+    if (isRunning) return;
+    isRunning = true;
+    startBtn.textContent = "Pause";
+
+    timer = setInterval(() => {
+      if (timeLeft <= 0) {
+        alertSound.play();
+        clearInterval(timer);
+        isRunning = false;
+        startBtn.textContent = "Start";
+        handlePomodoroEnd();
+      } else {
+        timeLeft--;
+        updateTimerDisplay(formatTime(timeLeft));
+        updateProgress(timeLeft / getCurrentDuration());
+      }
+    }, 1000);
+  }
+
+  // Pause Pomodoro timer
+  function pausePomodoro() {
+    if (!isRunning) return;
+    isRunning = false;
+    clearInterval(timer);
+    startBtn.textContent = "Start";
+  }
+
+  // Handle pomodoro end: switch between work/break and update streaks
+  function handlePomodoroEnd() {
+    if (!onBreak) {
+      // Just finished work session
+      pomodoroCount++;
+      streakCount.textContent = pomodoroCount;
+
+      // Decide if long break or short break
+      if (pomodoroCount % LONG_BREAK_INTERVAL === 0) {
+        timeLeft = POMO_LONG_BREAK;
+      } else {
+        timeLeft = POMO_SHORT_BREAK;
+      }
+      onBreak = true;
+      updateTimerDisplay(formatTime(timeLeft));
+      updateProgress(1);
+      startBtn.textContent = "Start";
+      alert("Break time! Relax for a bit.");
     } else {
-      timerDisplay.textContent = formatTime(stopwatch.seconds);
-      if (tickMarks) drawTicks();
-      if (progressCircle)
-        progressCircle.style.strokeDashoffset = 0;  // no progress for stopwatch
-      if (streakEl) streakEl.textContent = ''; // no pomodoro count for stopwatch
-    }
-
-    // Animate timerDisplay briefly
-    timerDisplay.classList.add('animate-complete');
-    setTimeout(() => timerDisplay.classList.remove('animate-complete'), 2000);
-  }
-
-  // Save Pomodoro state to Firebase & localStorage
-  async function savePomodoroState(uid) {
-    try {
-      await db.collection('pomodoroTimers').doc(uid).set({
-        seconds: pomo.seconds,
-        isRunning: pomo.isRunning,
-        breakMode: pomo.breakMode,
-        pomodoroCount: pomo.pomodoroCount,
-        initialTime: pomo.initial,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      // Also save locally
-      localStorage.setItem('pomoState', JSON.stringify({
-        seconds: pomo.seconds,
-        isRunning: pomo.isRunning,
-        breakMode: pomo.breakMode,
-        pomodoroCount: pomo.pomodoroCount,
-        initial: pomo.initial,
-        timestamp: Date.now()
-      }));
-    } catch (error) {
-      console.error("Failed to save Pomodoro state:", error);
+      // Finished break, start work again
+      timeLeft = POMO_WORK;
+      onBreak = false;
+      updateTimerDisplay(formatTime(timeLeft));
+      updateProgress(1);
+      startBtn.textContent = "Start";
+      alert("Break over! Time to focus.");
     }
   }
 
-  // Save Stopwatch state to Firebase & localStorage
-  async function saveStopwatchState(uid) {
-    try {
-      await db.collection('stopwatchTimers').doc(uid).set({
-        seconds: stopwatch.seconds,
-        isRunning: stopwatch.isRunning,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      // Also save locally
-      localStorage.setItem('stopwatchState', JSON.stringify({
-        seconds: stopwatch.seconds,
-        isRunning: stopwatch.isRunning,
-        timestamp: Date.now()
-      }));
-    } catch (error) {
-      console.error("Failed to save Stopwatch state:", error);
-    }
+  // Get current duration for progress calculation
+  function getCurrentDuration() {
+    if (!onBreak) return POMO_WORK;
+    return (pomodoroCount % LONG_BREAK_INTERVAL === 0) ? POMO_LONG_BREAK : POMO_SHORT_BREAK;
   }
 
-  // Load Pomodoro state from Firebase or localStorage
-  async function loadPomodoroState(uid) {
-    try {
-      const docRef = db.collection('pomodoroTimers').doc(uid);
-      const docSnap = await docRef.get();
-
-      if (docSnap.exists) {
-        const data = docSnap.data();
-        const now = new Date();
-        const savedTime = data.timestamp?.toDate?.();
-        const elapsed = savedTime ? Math.floor((now - savedTime) / 1000) : 0;
-
-        pomo.seconds = Math.max(0, data.seconds - (data.isRunning ? elapsed : 0));
-        pomo.isRunning = data.isRunning;
-        pomo.breakMode = data.breakMode;
-        pomo.pomodoroCount = data.pomodoroCount;
-        pomo.initial = data.initialTime || 1500;
-      } else {
-        // Try loading from localStorage
-        const localData = JSON.parse(localStorage.getItem('pomoState'));
-        if (localData) {
-          const elapsed = Math.floor((Date.now() - localData.timestamp) / 1000);
-          pomo.seconds = Math.max(0, localData.seconds - (localData.isRunning ? elapsed : 0));
-          pomo.isRunning = localData.isRunning;
-          pomo.breakMode = localData.breakMode;
-          pomo.pomodoroCount = localData.pomodoroCount;
-          pomo.initial = localData.initial || 1500;
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load Pomodoro state:', error);
-    }
+  // Reset Pomodoro timer
+  function resetPomodoro() {
+    clearInterval(timer);
+    isRunning = false;
+    startBtn.textContent = "Start";
+    timeLeft = POMO_WORK;
+    onBreak = false;
+    updateTimerDisplay(formatTime(timeLeft));
+    updateProgress(1);
   }
 
-  // Load Stopwatch state from Firebase or localStorage
-  async function loadStopwatchState(uid) {
-    try {
-      const docRef = db.collection('stopwatchTimers').doc(uid);
-      const docSnap = await docRef.get();
+  // Start Stopwatch
+  function startStopwatch() {
+    if (isRunning) return;
+    isRunning = true;
+    startBtn.textContent = "Pause";
+    let lastTime = Date.now();
 
-      if (docSnap.exists) {
-        const data = docSnap.data();
-        const now = new Date();
-        const savedTime = data.timestamp?.toDate?.();
-        const elapsed = savedTime ? Math.floor((now - savedTime) / 1000) : 0;
-
-        stopwatch.seconds = data.seconds + (data.isRunning ? elapsed : 0);
-        stopwatch.isRunning = data.isRunning;
-      } else {
-        // Try localStorage
-        const localData = JSON.parse(localStorage.getItem('stopwatchState'));
-        if (localData) {
-          const elapsed = Math.floor((Date.now() - localData.timestamp) / 1000);
-          stopwatch.seconds = localData.seconds + (localData.isRunning ? elapsed : 0);
-          stopwatch.isRunning = localData.isRunning;
-        }
-      }
-    } catch (error) {
-      console.error('Failed to load Stopwatch state:', error);
-    }
+    stopwatchInterval = setInterval(() => {
+      const now = Date.now();
+      stopwatchTime += now - lastTime;
+      lastTime = now;
+      updateTimerDisplay(formatStopwatch(stopwatchTime));
+      updateProgress(1); // full circle for stopwatch - no progress animation
+    }, 100);
   }
 
-  // Start Pomodoro timer logic
-  function startPomodoroTimer(uid) {
-    if (pomo.timerId) clearInterval(pomo.timerId);
-
-    pomo.timerId = setInterval(() => {
-      if (!pomo.breakMode) {
-        if (pomo.seconds > 0) {
-          pomo.seconds--;
-          updateDisplay();
-        } else {
-          pomo.pomodoroCount++;
-          if (streakEl) streakEl.textContent = pomo.pomodoroCount;
-          pomo.breakMode = true;
-          if (progressCircle) progressCircle.setAttribute('stroke', '#22c55e');
-          pomo.seconds = (pomo.pomodoroCount % 4 === 0) ? 15 * 60 : 5 * 60;
-          pomo.initial = pomo.seconds;
-          updateDisplay();
-          if (uid) savePomodoroState(uid);
-        }
-      } else {
-        if (pomo.seconds > 0) {
-          pomo.seconds--;
-          updateDisplay();
-        } else {
-          pomo.breakMode = false;
-          if (progressCircle) progressCircle.setAttribute('stroke', '#2563eb');
-          pomo.seconds = 25 * 60;
-          pomo.initial = pomo.seconds;
-          updateDisplay();
-          if (uid) savePomodoroState(uid);
-        }
-      }
-    }, 1000);
+  // Pause Stopwatch
+  function pauseStopwatch() {
+    if (!isRunning) return;
+    isRunning = false;
+    clearInterval(stopwatchInterval);
+    startBtn.textContent = "Start";
   }
 
-  // Start Stopwatch timer logic
-  function startStopwatchTimer(uid) {
-    if (stopwatch.timerId) clearInterval(stopwatch.timerId);
-
-    stopwatch.timerId = setInterval(() => {
-      stopwatch.seconds++;
-      updateDisplay();
-      if (uid) saveStopwatchState(uid);
-    }, 1000);
+  // Reset Stopwatch
+  function resetStopwatch() {
+    clearInterval(stopwatchInterval);
+    isRunning = false;
+    stopwatchTime = 0;
+    startBtn.textContent = "Start";
+    updateTimerDisplay("00:00:00");
+    updateProgress(1);
   }
 
-  // Stop Pomodoro timer
-  function stopPomodoroTimer(uid) {
-    if (pomo.timerId) clearInterval(pomo.timerId);
-    if (uid) savePomodoroState(uid);
+  // Update pro tip randomly
+  function updateProTip() {
+    proTip.textContent = tips[Math.floor(Math.random() * tips.length)];
   }
 
-  // Stop Stopwatch timer
-  function stopStopwatchTimer(uid) {
-    if (stopwatch.timerId) clearInterval(stopwatch.timerId);
-    if (uid) saveStopwatchState(uid);
-  }
-
-  // UI Mode Switch
-  function switchMode(newMode) {
-    mode = newMode;
-
-    if (mode === 'pomo') {
-      pomoBtn.classList.add('bg-blue-600', 'text-white');
-      pomoBtn.classList.remove('bg-gray-300', 'text-gray-800');
-      stopwatchBtn.classList.remove('bg-blue-600', 'text-white');
+  // Switch mode UI styling
+  function updateModeUI() {
+    if (mode === 'pomodoro') {
+      pomoBtn.classList.add('active', 'bg-blue-600', 'text-white');
+      stopwatchBtn.classList.remove('active', 'bg-blue-600', 'text-white');
       stopwatchBtn.classList.add('bg-gray-300', 'text-gray-800');
-
-      // Update Start button text to current Pomodoro state
-      if (pomo.isRunning) {
-        startBtn.textContent = 'Pause';
-      } else {
-        startBtn.textContent = 'Start';
-      }
+      resetBtn.disabled = false;
+      startBtn.disabled = false;
+      resetPomodoro();
     } else {
-      stopwatchBtn.classList.add('bg-blue-600', 'text-white');
-      stopwatchBtn.classList.remove('bg-gray-300', 'text-gray-800');
-      pomoBtn.classList.remove('bg-blue-600', 'text-white');
+      stopwatchBtn.classList.add('active', 'bg-blue-600', 'text-white');
+      pomoBtn.classList.remove('active', 'bg-blue-600', 'text-white');
       pomoBtn.classList.add('bg-gray-300', 'text-gray-800');
-
-      // Update Start button text to current Stopwatch state
-      if (stopwatch.isRunning) {
-        startBtn.textContent = 'Pause';
-      } else {
-        startBtn.textContent = 'Start';
-      }
+      resetBtn.disabled = false;
+      startBtn.disabled = false;
+      resetStopwatch();
     }
-
-    updateDisplay();
   }
 
   // Event Listeners
-  if (pomoBtn && stopwatchBtn && startBtn && resetBtn) {
-    pomoBtn.addEventListener('click', () => switchMode('pomo'));
 
-    stopwatchBtn.addEventListener('click', () => switchMode('stopwatch'));
+  pomoBtn.addEventListener('click', () => {
+    if (mode === 'pomodoro') return;
+    pauseStopwatch();
+    mode = 'pomodoro';
+    updateModeUI();
+  });
 
-    startBtn.addEventListener('click', () => {
-      if (mode === 'pomo') {
-        if (!pomo.isRunning) {
-          pomo.isRunning = true;
-          startBtn.textContent = 'Pause';
-          startPomodoroTimer(auth.currentUser?.uid);
-        } else {
-          pomo.isRunning = false;
-          startBtn.textContent = 'Resume';
-          stopPomodoroTimer(auth.currentUser?.uid);
-        }
-      } else {
-        if (!stopwatch.isRunning) {
-          stopwatch.isRunning = true;
-          startBtn.textContent = 'Pause';
-          startStopwatchTimer(auth.currentUser?.uid);
-        } else {
-          stopwatch.isRunning = false;
-          startBtn.textContent = 'Resume';
-          stopStopwatchTimer(auth.currentUser?.uid);
-        }
-      }
-    });
+  stopwatchBtn.addEventListener('click', () => {
+    if (mode === 'stopwatch') return;
+    pausePomodoro();
+    mode = 'stopwatch';
+    updateModeUI();
+  });
 
-        resetBtn.addEventListener('click', () => {
-      if (mode === 'pomo') {
-        stopPomodoroTimer(auth.currentUser?.uid);
-        pomo.isRunning = false;
-        pomo.breakMode = false;
-        pomo.seconds = 25 * 60;
-        pomo.initial = 25 * 60;
-        pomo.pomodoroCount = 0;
-        if (streakEl) streakEl.textContent = pomo.pomodoroCount;
-        updateDisplay();
-        startBtn.textContent = "Start";
-        if (auth.currentUser) savePomodoroState(auth.currentUser.uid);
-      } else {
-        // Stopwatch reset
-        stopStopwatchTimer(auth.currentUser?.uid);
-        stopwatch.isRunning = false;
-        stopwatch.seconds = 0;
-        updateDisplay();
-        startBtn.textContent = "Start";
-        if (auth.currentUser) saveStopwatchState(auth.currentUser.uid);
-      }
-    });
-  }
-
-  // On auth state changed - load states & start timers if needed
-  auth.onAuthStateChanged(async user => {
-  if (user) {
-    // ✅ Show user email, and UID
-    const userInfoDiv = document.getElementById('user-info');
-    const email = user.email || 'No email';
-    const uid = user.uid;
-
-    if (userInfoDiv) {
-      userInfoDiv.innerHTML = `
-        <p><strong>Email:</strong> ${email}</p>
-        <p><small>User ID: ${uid}</small></p>
-      `;
-    }
-
-    await loadPomodoroState(user.uid);
-    await loadStopwatchState(user.uid);
-
-    updateDisplay();
-
-    // Start Pomodoro timer if running
-    if (pomo.isRunning) {
-      startPomodoroTimer(user.uid);
-      if (mode === 'pomo') startBtn.textContent = "Pause";
-    } else if (mode === 'pomo') {
-      startBtn.textContent = "Start";
-    }
-
-    // Start Stopwatch timer if running
-    if (stopwatch.isRunning) {
-      startStopwatchTimer(user.uid);
-      if (mode === 'stopwatch') startBtn.textContent = "Pause";
-    } else if (mode === 'stopwatch') {
-      startBtn.textContent = "Start";
-    }
-
-    // Save periodically both timers every 5 seconds
-    setInterval(() => {
-      if (pomo.isRunning) savePomodoroState(user.uid);
-      if (stopwatch.isRunning) saveStopwatchState(user.uid);
-    }, 5000);
-
-  } else {
-    // No user - optionally clear timers or load from localStorage
-    const localPomo = JSON.parse(localStorage.getItem('pomoState'));
-    if (localPomo) {
-      pomo = {
-        seconds: localPomo.seconds,
-        isRunning: false, // do not auto-run for anonymous
-        breakMode: localPomo.breakMode,
-        pomodoroCount: localPomo.pomodoroCount,
-        initial: localPomo.initial || 1500,
-        timerId: null,
-      };
-    }
-
-    const localStopwatch = JSON.parse(localStorage.getItem('stopwatchState'));
-    if (localStopwatch) {
-      stopwatch = {
-        seconds: localStopwatch.seconds,
-        isRunning: false,
-        timerId: null,
-      };
-    }
-
-    updateDisplay();
-    startBtn.textContent = "Start";
-  }
-});
-
-
-  // Navigation Highlight (unchanged)
-  window.addEventListener('DOMContentLoaded', () => {
-    const currentPath = window.location.pathname;
-    const navMap = {
-      '/': 'nav-all',
-      '/pending': 'nav-pending',
-      '/completed': 'nav-completed',
-      '/pomodoro': 'nav-pomodoro',
-      '/countdown': 'nav-countdown'
-    };
-    const activeId = navMap[currentPath];
-    if (activeId) {
-      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
-      const activeBtn = document.getElementById(activeId);
-      if (activeBtn) activeBtn.classList.add('active');
+  startBtn.addEventListener('click', () => {
+    if (mode === 'pomodoro') {
+      if (isRunning) pausePomodoro();
+      else startPomodoro();
+    } else {
+      if (isRunning) pauseStopwatch();
+      else startStopwatch();
     }
   });
 
-  // Logout button (unchanged)
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      auth.signOut()
-        .then(() => {
-          window.location.href = '/logout';
-        })
-        .catch(error => {
-          console.error('Error signing out:', error);
-          alert('Failed to sign out. Please try again.');
-        });
-    });
-  }
-
-  // Initial display update
-  updateDisplay();
-</script>
+  resetBtn.addEventListener('click', () => {
+    if (mode === 'pomodoro') resetPomodoro();
+    else resetStopwatch();
+  });
 
 
-<script>
-  let popupWindow = null;
-let timerSyncInterval = null;
+  // Initialize on page load
+  init();
+  
 
-function openPomodoroPopup() {
-  if (popupWindow && !popupWindow.closed) {
-    popupWindow.focus();
+  auth.onAuthStateChanged(user => {
+  const userInfoDiv = document.getElementById('user-info');
+  if (!user) {
+    userInfoDiv.textContent = 'Not logged in';
     return;
   }
-
-  const width = 170;
-  const height = 170;
-  const left = window.screenX + window.innerWidth - width - 20;
-  const top = window.screenY + 20;
-
-  popupWindow = window.open(
-    '/pomodoro-popup',
-    'PomodoroPopup',
-    `width=${width},height=${height},left=${left},top=${top},` +
-    'resizable=no,toolbar=no,menubar=no,scrollbars=no,status=no'
-  );
-
-  function sendTimerToPopup() {
-    if (!popupWindow || popupWindow.closed) {
-      clearInterval(timerSyncInterval);
-      return;
-    }
-    
-    // Assuming you have variables keeping track of timer state:
-    // For example: pomo.seconds, pomo.initial, etc.
-    let seconds = pomo.seconds; // or your current timer seconds
-    let initialTime = pomo.initial; // or your timer initial duration
-    
-    popupWindow.postMessage({
-      type: 'updateTimer',
-      seconds,
-      initialTime
-    }, '*');
-  }
-
-  timerSyncInterval = setInterval(sendTimerToPopup, 1000);
-  sendTimerToPopup(); // send immediately once
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const popupBtn = document.getElementById('openPopupBtn');
-  if (popupBtn) popupBtn.addEventListener('click', openPomodoroPopup);
+  userInfoDiv.innerHTML = `<strong>Email:</strong> ${user.email} <br> <small>ID: ${user.uid}</small>`;
 });
 
 
 function toggleSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('mobile-sidebar');
-
-  if (sidebar && overlay) {
-    // Toggle sidebar visibility
-    sidebar.classList.toggle('-translate-x-full');
-    overlay.classList.toggle('hidden');
-  } else {
-    console.warn('Sidebar or overlay not found');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobile-sidebar');
+    sidebar?.classList.toggle('-translate-x-full');
+    overlay?.classList.toggle('hidden');
   }
-}
 
+// Logout link
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    auth.signOut().then(() => window.location.href = '/logout')
+      .catch(() => window.location.href = '/logout');
+  });
 
 
 </script>
-
 
 
 </body>

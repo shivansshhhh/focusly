@@ -64,22 +64,21 @@
          class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary" required>
 
   <div class="relative">
-  <input type="password" id="login-password" name="password" placeholder="Password"
-    class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary pr-10"
-    required>
-  
-  <!-- Single eye icon button -->
-  <button type="button" id="toggle-password" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-    <!-- Open eye SVG -->
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-      viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-    </svg>
-  </button>
-</div>
+        <input type="password" name="password" id="password"
+               placeholder="Password (min 6 characters)" minlength="6"
+               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary pr-10" required>
+        <span class="absolute right-3 top-2.5 cursor-pointer text-gray-500" data-toggle="password">
+          <!-- Eye Icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z"/>
+          </svg>
+          <!-- Eye Slash Icon (hidden by default) -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 eye-slash-icon hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.07 10.07 0 012.291-3.568M6.333 6.333A9.952 9.952 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.048 10.048 0 01-4.233 5.099M3 3l18 18"/>
+          </svg>
+        </span>
+      </div>
 
 
   <div class="flex justify-end">
@@ -136,12 +135,12 @@
 
       <!-- Social Logins -->
       <div class="space-y-3 mt-6">
-        <a href="/auth/google"
-           class="w-full flex justify-center items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100 transition">
-          <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google logo">
-          Continue with Google
-        </a>
-      </div>
+        <button id="google-signin-btn"
+        type="button"
+        class="w-full flex justify-center items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100 transition">
+  <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google logo" />
+  Continue with Google
+</button>
 
       
       <!-- Toggle Login Mode Button -->
@@ -171,7 +170,7 @@
       <!-- Sign Up -->
       <p class="text-sm text-center mt-6">
         Don’t have an account?
-        <a href="#" onclick="replacePage('/register'); return false;" class="text-primary font-medium hover:underline">Sign up</a>
+        <a href="/register" class="text-primary font-medium hover:underline">Sign up</a>
       </p>
 
     </div>
@@ -180,253 +179,208 @@
 <div id="recaptcha-container"></div>
 
 <script>
-  const menuBtn = document.getElementById('menu-btn');
-  const mobileMenu = document.getElementById('mobile-menu');
-  let menuOpen = false;
-
-  menuBtn?.addEventListener('click', () => {
-    menuOpen = !menuOpen;
-    mobileMenu.classList.toggle('max-h-0', !menuOpen);
-    mobileMenu.classList.toggle('max-h-60', menuOpen);
-  });
-
-  // Toggle between email and phone login
-  const toggleLoginMode = document.getElementById('toggle-login-mode');
-  const toggleLabel = document.getElementById('toggle-label');
-  const toggleIconPhone = document.getElementById('icon-email');
-  const toggleIconEmail = document.getElementById('icon-phone');
-  const emailLogin = document.getElementById('email-login');
-  const phoneLogin = document.getElementById('phone-login');
-
-  toggleLoginMode?.addEventListener('click', () => {
-    const isEmailVisible = !emailLogin.classList.contains('hidden');
-
-    if (isEmailVisible) {
-      // Show phone login
-      emailLogin.classList.add('hidden');
-      phoneLogin.classList.remove('hidden');
-      toggleLabel.textContent = 'Continue with Email';
-      toggleIconPhone.classList.remove('hidden');
-      toggleIconEmail.classList.add('hidden');
-    } else {
-      // Show email login
-      phoneLogin.classList.add('hidden');
-      emailLogin.classList.remove('hidden');
-      toggleLabel.textContent = 'Continue with Phone';
-      toggleIconPhone.classList.add('hidden');
-      toggleIconEmail.classList.remove('hidden');
-    }
-  });
-
-  // Firebase initialization and OTP handling
+  // Firebase config
   const firebaseConfig = {
-    apiKey: "AIzaSyDZvQXmgnPD81cCdjVrgDn-QlaY_f5m2xE",
-    authDomain: "focusly-97e22.firebaseapp.com",
-    projectId: "focusly-97e22",
-    storageBucket: "focusly-97e22.firebasestorage.app",
-    messagingSenderId: "109369885144",
-    appId: "1:109369885144:web:1f5c3627c4c5f6d4b372ad",
-    measurementId: "G-8GCFDG9EKL"
+    apiKey: "AIzaSyDp1PwJHxMfNjNrlOGV-XbiSju1TDQDfo0",
+    authDomain: "focusly-a01fb.firebaseapp.com",
+    projectId: "focusly-a01fb",
+    storageBucket: "focusly-a01fb.appspot.com",
+    messagingSenderId: "225376542906",
+    appId: "1:225376542906:web:2df140f814e2594d072283",
+    measurementId: "G-FY70D2J35M"
   };
 
   firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
+  const provider = new firebase.auth.GoogleAuthProvider();
 
-  let recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-    size: 'invisible'
-  });
-
-  const sendOtpBtn = document.getElementById('send-otp-btn');
-  const verifyOtpBtn = document.getElementById('verify-otp-btn');
-  const phoneField = document.getElementById('phone-field');
-  const otpField = document.getElementById('otp-field');
-  const countrySelect = document.querySelector('select[name="country_code"]');
-  const otpMessage = document.getElementById('otp-message');
-  let confirmationResult;
-
-
-
-function mapFirebaseError(code) {
-  switch (code) {
-    case 'auth/user-not-found':
-      return 'No user found with that email.';
-    case 'auth/wrong-password':
-      return 'Incorrect password.';
-    case 'auth/invalid-email':
-      return 'Please enter a valid email address.';
-    case 'auth/too-many-requests':
-      return 'Too many attempts. Please try again later.';
-    case 'auth/invalid-login-credentials':
-      return 'Invalid login credentials.';
-    default:
-      return 'Login failed. Please try again.';
-  }
-}
-
-document.getElementById('email-login').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-
-  if (!email || !password) {
-    alert("Please enter both email and password.");
-    return;
-  }
-
-  try {
-    const userCred = await auth.signInWithEmailAndPassword(email, password);
-    const idToken = await userCred.user.getIdToken();
-
-    const user = userCred.user;
-const db = firebase.firestore();
-const userRef = db.collection('users').doc(user.uid);
-const userDoc = await userRef.get();
-
-if (!userDoc.exists) {
-  await userRef.set({
-    name: user.displayName || 'New User',
-    email: user.email,
-    phone: user.phoneNumber || '',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-}
-
-
-    const response = await fetch("/login-client", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ id_token: idToken })
-    });
-
-    const result = await response.json();
-    if (response.ok && result.redirect) {
-      window.location.href = result.redirect;
-    } else {
-      window.location.href = result.redirect || "/login";
-    }
-
-  } catch (error) {
-    const friendlyMsg = mapFirebaseError(error.code);
-    window.location.href = "/login?error=" + encodeURIComponent(friendlyMsg);
-  }
-});
-
-
-  function showOtpMessage(text, type = 'error') {
-    otpMessage.textContent = text;
-    otpMessage.className = 'text-sm mt-1 min-h-[1.5rem] ' + (type === 'success' ? 'text-green-600' : 'text-red-600');
-  }
-
-  sendOtpBtn.addEventListener('click', function (e) {
-    e.preventDefault();
-
-    const countryCode = countrySelect.value;
-    const phoneNumber = phoneField.value.trim();
-    if (!phoneNumber || phoneNumber.length < 6) {
-      showOtpMessage("Please enter a valid mobile number.");
-      return;
-    }
-
-    const fullPhoneNumber = countryCode + phoneNumber;
-    sendOtpBtn.disabled = true;
-    sendOtpBtn.textContent = "Sending...";
-
-    auth.signInWithPhoneNumber(fullPhoneNumber, recaptchaVerifier)
-      .then(result => {
-        confirmationResult = result;
-        otpField.classList.remove('hidden');
-        verifyOtpBtn.classList.remove('hidden');
-        sendOtpBtn.classList.add('hidden');
-        showOtpMessage("OTP sent successfully. Please check your phone.", 'success');
-      })
-      .catch(error => {
-        showOtpMessage('Error sending OTP: ' + error.message);
-        recaptchaVerifier.clear();
-        recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-          size: 'invisible'
-        });
-        sendOtpBtn.disabled = false;
-        sendOtpBtn.textContent = "Get OTP";
-      });
-  });
-
-  verifyOtpBtn.addEventListener('click', function (e) {
-    e.preventDefault();
-    const otp = otpField.value.trim();
-
-    if (!otp || otp.length < 4) {
-      showOtpMessage("Please enter the OTP.");
-      return;
-    }
-
-    verifyOtpBtn.disabled = true;
-    verifyOtpBtn.textContent = "Verifying...";
-
-    confirmationResult.confirm(otp)
-      .then(async result => {
-        const user = result.user;
-        const idToken = await user.getIdToken();
-
-        const db = firebase.firestore();
-const userRef = db.collection('users').doc(user.uid);
-const userDoc = await userRef.get();
-
-if (!userDoc.exists) {
-  await userRef.set({
-    name: 'New User',
-    email: user.email || '',
-    phone: user.phoneNumber,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-}
-
-
-        // Send token to Flask backend
-        const response = await fetch("/login-phone", {
+  // =======================
+  // GOOGLE SIGN-IN
+  // =======================
+ 
+  document.getElementById("google-signin-btn").addEventListener("click", function () {
+    firebase.auth().signInWithPopup(provider)
+      .then((result) => result.user.getIdToken())
+      .then((idToken) => {
+        return fetch("/google-signin", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ id_token: idToken })  // Flask expects 'id_token' key
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken })
         });
-
-        if (response.ok) {
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
           window.location.href = "/dashboard";
         } else {
-          showOtpMessage("Session creation failed. Try again.");
-          verifyOtpBtn.disabled = false;
-          verifyOtpBtn.textContent = "Verify OTP";
+          alert(data.message || "Authentication failed.");
         }
       })
-      .catch(err => {
-        showOtpMessage("Invalid OTP. Please try again.");
-        verifyOtpBtn.disabled = false;
-        verifyOtpBtn.textContent = "Verify OTP";
+      .catch((error) => {
+        console.error("Google Sign-In Error:", error);
+        alert("Google Sign-In failed: " + error.message);
       });
   });
 
-  
-</script>
 
+  // =======================
+  // EMAIL LOGIN
+  // =======================
+  document.getElementById("email-login").addEventListener("submit", function (e) {
+    e.preventDefault();
 
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("password").value;
 
-<script>
-  function replacePage(url) {
-    window.location.replace(url);
+    firebase.auth().signInWithEmailAndPassword(email, password)
+      .then(userCredential => userCredential.user.getIdToken())
+      .then(idToken => {
+        return fetch("/login-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken })
+        });
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = "/dashboard";
+        } else {
+          displayGlobalMessage(data.message || "Email login failed.", "error");
+        }
+      })
+      .catch(error => {
+        displayGlobalMessage("Login error: " + error.message, "error");
+        console.error(error);
+      });
+  });
+
+  // =======================
+  // PHONE LOGIN
+  // =======================
+  let confirmationResult;
+
+  document.getElementById("send-otp-btn").addEventListener("click", function () {
+    const phoneInput = document.getElementById("phone-field");
+    const otpMessage = document.getElementById("otp-message");
+    const otpField = document.getElementById("otp-field");
+    const verifyBtn = document.getElementById("verify-otp-btn");
+    const sendOtpBtn = document.getElementById("send-otp-btn");
+
+    const countryCode = document.querySelector('select[name="country_code"]').value;
+    const phoneNumber = countryCode + phoneInput.value.trim();
+
+    otpMessage.classList.remove("text-red-600", "text-green-600");
+
+    // reCAPTCHA setup
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+        size: 'invisible',
+        callback: response => console.log("reCAPTCHA solved")
+      });
+    }
+
+    firebase.auth().signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier)
+      .then(result => {
+        confirmationResult = result;
+
+        // Show OTP field and hide OTP button
+        otpField.classList.remove("hidden");
+        verifyBtn.classList.remove("hidden");
+        sendOtpBtn.classList.add("hidden");
+
+        otpMessage.textContent = "OTP sent!";
+        otpMessage.classList.add("text-green-600");
+      })
+      .catch(error => {
+        otpMessage.textContent = "Failed to send OTP: " + error.message;
+        otpMessage.classList.add("text-red-600");
+        console.error(error);
+      });
+  });
+
+  document.getElementById("verify-otp-btn").addEventListener("click", function () {
+    const code = document.getElementById("otp-field").value.trim();
+    const otpMessage = document.getElementById("otp-message");
+
+    otpMessage.classList.remove("text-red-600", "text-green-600");
+
+    confirmationResult.confirm(code)
+      .then(result => result.user.getIdToken())
+      .then(idToken => {
+        return fetch("/login-phone", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken })
+        });
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = "/dashboard";
+        } else {
+          otpMessage.textContent = data.message || "Phone login failed.";
+          otpMessage.classList.add("text-red-600");
+        }
+      })
+      .catch(error => {
+        otpMessage.textContent = "Verification failed: " + error.message;
+        otpMessage.classList.add("text-red-600");
+        console.error(error);
+      });
+  });
+
+  // =======================
+  // TOGGLE LOGIN MODE
+  // =======================
+  document.getElementById("toggle-login-mode").addEventListener("click", () => {
+    const emailForm = document.getElementById("email-login");
+    const phoneForm = document.getElementById("phone-login");
+
+    const phoneIcon = document.getElementById("icon-email");
+    const emailIcon = document.getElementById("icon-phone");
+    const label = document.getElementById("toggle-label");
+
+    const isEmailVisible = !emailForm.classList.contains("hidden");
+
+    emailForm.classList.toggle("hidden", isEmailVisible);
+    phoneForm.classList.toggle("hidden", !isEmailVisible);
+    phoneIcon.classList.toggle("hidden", !isEmailVisible);
+    emailIcon.classList.toggle("hidden", isEmailVisible);
+    label.textContent = isEmailVisible ? "Continue with Email" : "Continue with Phone";
+  });
+
+  // =======================
+  // PASSWORD TOGGLE
+  // =======================
+  document.querySelectorAll('[data-toggle]').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const inputId = toggle.getAttribute('data-toggle');
+      const input = document.getElementById(inputId);
+      const eyeIcon = toggle.querySelector('.eye-slash-icon');
+      const eyeSlashIcon = toggle.querySelector('.eye-icon');
+      const isPassword = input.getAttribute('type') === 'password';
+
+      input.setAttribute('type', isPassword ? 'text' : 'password');
+      eyeIcon.classList.toggle('hidden', !isPassword);
+      eyeSlashIcon.classList.toggle('hidden', isPassword);
+    });
+  });
+
+  // =======================
+  // HELPER: DISPLAY FLASH-LIKE MESSAGE
+  // =======================
+  function displayGlobalMessage(msg, type) {
+    let container = document.querySelector(".global-message");
+    if (!container) {
+      container = document.createElement("div");
+      container.className = "text-sm my-4 global-message";
+      document.querySelector("main .max-w-md").prepend(container);
+    }
+    container.textContent = msg;
+    container.className = `text-sm my-4 global-message ${type === "error" ? "text-red-600" : "text-green-600"}`;
   }
 </script>
-<script>
-  const passwordInput = document.getElementById('login-password');
-  const toggleBtn = document.getElementById('toggle-password');
 
-  toggleBtn.addEventListener('click', () => {
-    const isPassword = passwordInput.type === 'password';
-    passwordInput.type = isPassword ? 'text' : 'password';
-  });
-</script>
 
 
 </body>
