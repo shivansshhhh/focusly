@@ -146,20 +146,22 @@ Visit 👉 http://127.0.0.1:5000
 📂 Project Structure
 ```
 focusly/
-│── backend/
-│   ├── app.py                # Main Flask app
-│   ├── focusly-firebase-adminsdk.json
-│   ├── templates/            # Jinja2 templates (HTML)
-│   │    ├── index.html
-│   │    ├── login.html
-│   │    ├── register.html
-│   │    ├── dashboard.html
-│   │    └── pomodoro.html and other's
-│   └── static/               # videos, and Images
 │
-├── requirements.txt
-├── .env
-└── README.md
+├── backend/
+│   ├── app.py                  # Main Flask app
+│   ├── firebase_key.json       # Firebase Admin SDK credentials
+│   ├── requirements.txt        # Python dependencies
+│   ├── templates/              # Jinja2 templates (HTML)
+│   │   ├── index.html
+│   │   ├── login.html
+│   │   ├── register.html
+│   │   ├── dashboard.html
+│   │   ├── pomodoro.html
+│   │   └── ...others
+│   └── static/                 # Videos, images, CSS, JS files
+│
+├── .env                        # Environment variables (optional)
+└── README.md                   # Project documentation
 ```
 ---
 
