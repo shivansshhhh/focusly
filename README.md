@@ -117,6 +117,21 @@ pip install -r requirements.txt
   "universe_domain": "googleapis.com"
 }
 ```
+🔹 Update Firebase Config in Templates
+
+    Go to your frontend Firebase initialization code (typically found in a config or .env file used in templates) and update the following fields with your Firebase project details:
+    // Firebase config (replace with your own project values)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID",
+      measurementId: "YOUR_MEASUREMENT_ID"
+    };
+
+  📌 Make sure the Firebase web config matches the one found in your [Firebase Console → Project Settings → General → Web App Config].
 
 ### 6️⃣ Run the app
 ```bash
