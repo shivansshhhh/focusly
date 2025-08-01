@@ -10,7 +10,7 @@
 ## ✨ Features
 
 - 🔑 **Authentication**
-  - Sign in with **Google OAuth 2.0**
+  - Sign in with **Google OAuth**
   - Sign in with **Phone Authentication** via Firebase
   - Secure session management with Flask
 - 📊 **User Data Management**
@@ -34,7 +34,7 @@
 
 - **Backend:** [Flask](https://flask.palletsprojects.com/) (Python)
 - **Frontend:** [TailwindCSS](https://tailwindcss.com/) + Jinja Templates
-- **Authentication:** [Google OAuth 2.0](https://developers.google.com/identity/protocols/oauth2) + [Firebase Auth](https://firebase.google.com/docs/auth)
+- **Authentication:** [Firebase Auth](https://firebase.google.com/docs/auth)
 - **Deployment:** Compatible with Heroku / Render / AWS / GCP
 - **Environment Management:** Python-dotenv
 - **Database:** [Firebase Firestore](https://firebase.google.com/docs/firestore)
@@ -95,40 +95,37 @@ pip install -r requirements.txt
 
     Create a Firebase project.
 
-    Enable Authentication → Google & Phone Sign-in.
+    Enable Authentication → Email, Google & Phone Sign-in.
 
     Download your Admin SDK JSON and save it as:
 
-    focusly-firebase-adminsdk.json
+    firebase_key.json
 
-🔹 Google Cloud
+### 5️⃣ Add a firebase_key.json file paste all details
 
-    Create a project in Google Cloud Console.
-
-    Go to APIs & Services → Credentials → Create OAuth Client ID.
-
-    Set Authorized Redirect URI to:
-
-    http://127.0.0.1:5000/auth/callback
-
-### 5️⃣ Add a .env file
-
-FLASK_SECRET_KEY=supersecretkey
-GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+{
+  "type": "service_account",
+  "project_id": "your-project-id",
+  "private_key_id": "your-private-key-id",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nYOUR-PRIVATE-KEY\n-----END PRIVATE KEY-----\n",
+  "client_email": "your-service-account@your-project-id.iam.gserviceaccount.com",
+  "client_id": "your-client-id",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/your-service-account%40your-project-id.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
 
 ### 6️⃣ Run the app
 ```bash
 cd backend
 python app.py
 ```
+Now all set.
 Visit 👉 http://127.0.0.1:5000
 
-🔑 Environment Variables
-Variable	Description
-FLASK_SECRET_KEY	Secret key for Flask sessions
-GOOGLE_CLIENT_ID	Google OAuth 2.0 Client ID
-GOOGLE_CLIENT_SECRET	Google OAuth 2.0 Client Secret
+
 📂 Project Structure
 ```
 focusly/
@@ -180,8 +177,6 @@ The app was manually tested to ensure readiness for production:
 ✅ Firebase rules verified for security
 
 No critical bugs found at the time of testing.
-
-If your sign up not working (google auth disconnection or other issues I'll fix this soon.)
 
 try-
 
