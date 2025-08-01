@@ -70,7 +70,8 @@
 - **Approach:** Code-First (Firestore documents are defined via Python logic and js, not SQL).
 - **Firestore Indexes** Firestore auto-creates indexes for all single fields.
 ---
-##Live link- https://betsito.com/
+## Live link- https://betsito.com/
+
 ## 🚀 Getting Started
 
 Follow these steps to run Focusly locally.
