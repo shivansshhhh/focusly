@@ -173,7 +173,7 @@ focusly/
 
 The app is deployed on a privately owned domain using a Germany-based VPS for full control over deployment and performance.
 
-- **Domain**: [https://betsito.com](https://betsito.com)
+- **Domain**: [https://betsito.com](https://betsito.com) this domain no longer maintained due to cost issues instead visit:- https://focusly-task.onrender.com
 - **Registrar**: Njalla
 - **Server Location**: Germany
 - **SSL**: Enabled via Let's Encrypt
